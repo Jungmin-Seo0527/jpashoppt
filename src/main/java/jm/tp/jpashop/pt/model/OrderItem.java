@@ -28,6 +28,17 @@ public class OrderItem {
     private Order order;
 
     private int orderPrice;
-
     private int count;
+    private int totalOrderPrice;
+
+    public static OrderItem createOrderItem(Item item, int price, int count) {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setItem(item);
+        orderItem.setOrderPrice(price);
+        orderItem.setCount(count);
+        orderItem.setTotalOrderPrice(price * count);
+
+        item.removeStock(count);
+        return orderItem;
+    }
 }
