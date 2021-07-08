@@ -41,4 +41,20 @@ public class OrderItem {
         item.removeStock(count);
         return orderItem;
     }
+
+    // business logic
+
+
+    /**
+     * 상품 주문 취소 -> 상품 수량 원상 복귀
+     */
+    public void cancel() {
+        getItem().addStock(count);
+    }
+
+    // inquiry logic
+
+    public int getTotalPrice() {
+        return getOrderPrice() * getCount();
+    }
 }

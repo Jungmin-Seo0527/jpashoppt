@@ -67,4 +67,18 @@ public class Order {
         this.delivery = delivery;
         delivery.setOrder(this);
     }
+
+    // === business logic
+
+    public void cancel() {
+        assert getDelivery().getDeliveryStatus() != DeliveryStatus.COMP : "배달이 완료된 주문은 취소가 불가능 합니다.";
+        setOrderStatus(OrderStatus.CANCEL);
+        orderItems.forEach(OrderItem::cancel);
+    }
+
+    // --- inquiry logic
+
+    public int getTotalPrice() {
+        return orderItems.stream().mapToInt(OrderItem::getTotalPrice).sum();
+    }
 }
