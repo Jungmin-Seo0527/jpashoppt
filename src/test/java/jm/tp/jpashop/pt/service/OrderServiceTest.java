@@ -2,10 +2,7 @@ package jm.tp.jpashop.pt.service;
 
 import jm.tp.jpashop.pt.exception.NotEnoughStockException;
 import jm.tp.jpashop.pt.exception.NotExit;
-import jm.tp.jpashop.pt.model.Address;
-import jm.tp.jpashop.pt.model.Member;
-import jm.tp.jpashop.pt.model.Order;
-import jm.tp.jpashop.pt.model.OrderStatus;
+import jm.tp.jpashop.pt.model.*;
 import jm.tp.jpashop.pt.model.item.Book;
 import jm.tp.jpashop.pt.model.item.Item;
 import jm.tp.jpashop.pt.repository.ItemRepository;
@@ -66,6 +63,7 @@ class OrderServiceTest {
         Order order = orderRepository.findById(orderId).orElseThrow(NotExit::new);
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.ORDER);
         assertThat(order.getDelivery().getAddress()).isSameAs(member.getAddress());
+        assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.READY);
     }
 
     @Test
@@ -77,11 +75,11 @@ class OrderServiceTest {
         Long itemId = createTestItem("토비의 Spring", 10000, itemQuantity);
 
         // when
-
-        // then
         assertThrows(NotEnoughStockException.class, () -> {
             Long orderId = orderService.order(memberId, itemId, itemQuantity + 10);
         });
+
+        // then
         Item item = itemRepository.findById(itemId).orElseThrow(NotExit::new);
         assertThat(item.getStockQuantity()).isEqualTo(itemQuantity);
     }
@@ -104,5 +102,29 @@ class OrderServiceTest {
         Order order = orderRepository.findById(orderId).orElseThrow(NotExit::new);
         assertThat(item.getStockQuantity()).isEqualTo(itemQuantity);
         assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.CANCEL);
+    }
+
+    @Test
+    @DisplayName("주문 취소를 하려 했으나 이미 배달 완료")
+    public void orderCancel2() throws Exception {
+        // given
+        int itemQuantity = 10;
+        int itemBuyCount = 5;
+        Long memberId = createTestMember("서정민1", "서울", "잠실로", "234");
+        Long itemId = createTestItem("토비의 Spring", 10000, itemQuantity);
+        Long orderId = orderService.order(memberId, itemId, itemBuyCount);
+
+        Order order = orderRepository.findById(orderId).orElseThrow(NotExit::new);
+
+        // when
+        order.getDelivery().complete();
+        assertThrows(IllegalStateException.class, () -> {
+            orderService.cancel(orderId);
+        });
+
+        // then
+        Item item = itemRepository.findById(itemId).orElseThrow(NotExit::new);
+        assertThat(item.getStockQuantity()).isEqualTo(itemQuantity - itemBuyCount);
+        assertThat(order.getOrderStatus()).isEqualTo(OrderStatus.ORDER);
     }
 }

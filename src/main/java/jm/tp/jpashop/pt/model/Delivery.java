@@ -25,4 +25,8 @@ public class Delivery {
 
     @Enumerated(EnumType.STRING)
     private DeliveryStatus deliveryStatus;
+
+    public void complete() {
+        setDeliveryStatus(DeliveryStatus.COMP);
+    }
 }
