@@ -1,16 +1,17 @@
 package jm.tp.jpashop.pt.model;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static lombok.AccessLevel.*;
+
 @Entity
-@Getter @Setter
-@RequiredArgsConstructor
+@Getter @Builder @Setter
+@AllArgsConstructor(access = PRIVATE)
+@NoArgsConstructor(access = PROTECTED)
 public class Member {
 
     @Id @GeneratedValue
@@ -22,6 +23,7 @@ public class Member {
     @Embedded
     private Address address;
 
+    @Builder.Default
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>();
 }

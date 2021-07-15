@@ -4,10 +4,13 @@ import lombok.*;
 
 import javax.persistence.Embeddable;
 
-@Getter @Setter
+import static lombok.AccessLevel.*;
+
+@NoArgsConstructor(access = PROTECTED)
+@AllArgsConstructor(access = PRIVATE)
+@Getter @Setter(PRIVATE)
+@Builder
 @Embeddable
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Address {
 
     private String city;

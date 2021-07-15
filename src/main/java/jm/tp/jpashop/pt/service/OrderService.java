@@ -24,9 +24,10 @@ public class OrderService {
     public Long order(Long memberId, Long itemId, int count) {
         Member member = memberRepository.findById(memberId);
 
-        Delivery delivery = new Delivery();
-        delivery.setAddress(member.getAddress());
-        delivery.setDeliveryStatus(DeliveryStatus.READY);
+        Delivery delivery = Delivery.builder()
+                .address(member.getAddress())
+                .deliveryStatus(DeliveryStatus.READY)
+                .build();
 
         Item item = itemRepository.findById(itemId).orElseThrow(NotExitItem::new);
 

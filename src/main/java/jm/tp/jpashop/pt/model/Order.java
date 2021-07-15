@@ -1,8 +1,9 @@
 package jm.tp.jpashop.pt.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -12,12 +13,14 @@ import java.util.List;
 
 import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.FetchType.LAZY;
+import static lombok.AccessLevel.PRIVATE;
 import static lombok.AccessLevel.PROTECTED;
 
 @Entity
-@Getter @Setter
-@Table(name = "orders")
 @NoArgsConstructor(access = PROTECTED)
+@AllArgsConstructor(access = PRIVATE)
+@Table(name = "orders")
+@Getter @Builder
 public class Order {
 
     @Id @GeneratedValue
@@ -28,6 +31,8 @@ public class Order {
     @JoinColumn(name = "member_id")
     private Member member;
 
+
+    @Builder.Default
     @OneToMany(mappedBy = "order", cascade = ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
@@ -41,13 +46,14 @@ public class Order {
     private OrderStatus orderStatus;
 
     public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
-        Order order = new Order();
+        Order order = Order.builder()
+                .orderStatus(OrderStatus.ORDER)
+                .orderDate(LocalDateTime.now())
+                .build();
         order.setMember(member);
         order.setDelivery(delivery);
-        Arrays.stream(orderItems).forEach(order::addOrderItem);
-        order.setOrderStatus(OrderStatus.ORDER);
-        order.setOrderDate(LocalDateTime.now());
 
+        Arrays.stream(orderItems).forEach(order::addOrderItem);
         return order;
     }
 
@@ -60,20 +66,25 @@ public class Order {
 
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
-        orderItem.setOrder(this);
+        orderItem.putBucket(this);
     }
 
     public void setDelivery(Delivery delivery) {
         this.delivery = delivery;
-        delivery.setOrder(this);
+        delivery.startDelivery(this);
     }
 
     // === business logic
 
+    public void changeOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
     public void cancel() {
         if (getDelivery().getDeliveryStatus() == DeliveryStatus.COMP)
             throw new IllegalStateException("배달이 완료된 주문은 취소가 불가능 합니다.");
-        setOrderStatus(OrderStatus.CANCEL);
+        changeOrderStatus(OrderStatus.CANCEL);
+
         orderItems.forEach(OrderItem::cancel);
     }
 

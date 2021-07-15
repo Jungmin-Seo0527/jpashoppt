@@ -39,9 +39,15 @@ class OrderServiceTest {
     }
 
     private Long createTestMember(String name, String city, String street, String etc) {
-        Member member = new Member();
-        member.setName(name);
-        member.setAddress(new Address(city, street, etc));
+        Member member = Member.builder()
+                .name(name)
+                .address(Address.builder()
+                        .city(city)
+                        .street(street)
+                        .etc(etc)
+                        .build()
+                ).build();
+
         memberService.join(member);
         return member.getId();
     }

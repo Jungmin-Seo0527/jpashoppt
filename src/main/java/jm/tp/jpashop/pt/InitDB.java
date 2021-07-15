@@ -75,10 +75,14 @@ public class InitDB {
         }
 
         private Member createMember(String name, String city, String street, String zipcode) {
-            Member member = new Member();
-            member.setName(name);
-            member.setAddress(new Address(city, street, zipcode));
-            return member;
+            return Member.builder()
+                    .name(name)
+                    .address(Address.builder()
+                            .city(city)
+                            .street(street)
+                            .etc(zipcode)
+                            .build())
+                    .build();
         }
 
         private Book createBook(String name, int price, int stockQuantity) {
@@ -90,9 +94,9 @@ public class InitDB {
         }
 
         private Delivery createDelivery(Member member) {
-            Delivery delivery = new Delivery();
-            delivery.setAddress(member.getAddress());
-            return delivery;
+            return Delivery.builder()
+                    .address(member.getAddress())
+                    .build();
         }
     }
 }
