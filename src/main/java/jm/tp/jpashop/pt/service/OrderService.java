@@ -2,14 +2,21 @@ package jm.tp.jpashop.pt.service;
 
 import jm.tp.jpashop.pt.exception.NotExitItem;
 import jm.tp.jpashop.pt.exception.NotExitOrder;
-import jm.tp.jpashop.pt.model.*;
+import jm.tp.jpashop.pt.model.Delivery;
+import jm.tp.jpashop.pt.model.DeliveryStatus;
+import jm.tp.jpashop.pt.model.Member;
+import jm.tp.jpashop.pt.model.Order;
+import jm.tp.jpashop.pt.model.OrderItem;
 import jm.tp.jpashop.pt.model.item.Item;
 import jm.tp.jpashop.pt.repository.ItemRepository;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.repository.OrderRepository;
+import jm.tp.jpashop.pt.repository.OrderSearch;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -42,5 +49,9 @@ public class OrderService {
     @Transactional
     public void cancel(Long orderId) {
         orderRepository.findById(orderId).orElseThrow(NotExitOrder::new).cancel();
+    }
+
+    public List<Order> findOrders(OrderSearch orderSearch) {
+        return orderRepository.findAllByString(orderSearch);
     }
 }

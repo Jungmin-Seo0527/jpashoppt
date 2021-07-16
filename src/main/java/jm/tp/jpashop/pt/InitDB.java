@@ -1,6 +1,10 @@
 package jm.tp.jpashop.pt;
 
-import jm.tp.jpashop.pt.model.*;
+import jm.tp.jpashop.pt.model.Address;
+import jm.tp.jpashop.pt.model.Delivery;
+import jm.tp.jpashop.pt.model.Member;
+import jm.tp.jpashop.pt.model.Order;
+import jm.tp.jpashop.pt.model.OrderItem;
 import jm.tp.jpashop.pt.model.item.Book;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -86,11 +90,11 @@ public class InitDB {
         }
 
         private Book createBook(String name, int price, int stockQuantity) {
-            Book book1 = new Book();
-            book1.setName(name);
-            book1.setPrice(price);
-            book1.setStockQuantity(stockQuantity);
-            return book1;
+            return Book.builder()
+                    .name(name)
+                    .price(price)
+                    .stockQuantity(stockQuantity)
+                    .build();
         }
 
         private Delivery createDelivery(Member member) {

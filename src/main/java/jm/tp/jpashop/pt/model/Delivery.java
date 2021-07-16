@@ -46,7 +46,7 @@ public class Delivery {
         setDeliveryStatus(DeliveryStatus.COMP);
     }
 
-    public void startDelivery(Order order) {
+    public void matchingOrder(Order order) {
         setOrder(order);
     }
 }

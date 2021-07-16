@@ -24,20 +24,23 @@ class ItemServiceTest {
     @DisplayName("상품 등록")
     public void saveItem() throws Exception {
         // given
-        Book book = new Book();
-        book.setName("JPA1");
-        book.setPrice(10000);
-        book.setStockQuantity(20);
+        Book book = Book.builder()
+                .name("JPA1")
+                .price(10000)
+                .stockQuantity(20)
+                .build();
 
-        Album album = new Album();
-        album.setName("2집");
-        album.setPrice(10000);
-        album.setStockQuantity(20);
-        album.setArtist("BTS");
-        album.setEtc("?");
+        Album album = Album.builder()
+                .name("2집")
+                .price(10000)
+                .stockQuantity(20)
+                .artist("BTS")
+                .etc("?")
+                .build();
 
-        Movie movie = new Movie();
-        movie.setName("메트릭스");
+        Movie movie = Movie.builder()
+                .name("매트릭스")
+                .build();
 
         // when
         itemService.saveItem(book);
@@ -54,10 +57,11 @@ class ItemServiceTest {
     @DisplayName("아이디로 상품 찾기")
     public void findOneTest() throws Exception {
         // given
-        Item item = new Book();
-        item.setName("테스트용");
-        item.setPrice(10000000);
-        item.setStockQuantity(0);
+        Item item = Book.builder()
+                .name("테스트용")
+                .price(10000000)
+                .stockQuantity(0)
+                .build();
 
         // when
         Long itemId = itemService.saveItem(item);

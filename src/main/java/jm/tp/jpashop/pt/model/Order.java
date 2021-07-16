@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import static lombok.AccessLevel.PROTECTED;
 @NoArgsConstructor(access = PROTECTED)
 @AllArgsConstructor(access = PRIVATE)
 @Table(name = "orders")
-@Getter @Builder
+@Getter @Builder @Setter
 public class Order {
 
     @Id @GeneratedValue
@@ -43,11 +44,11 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus orderStatus;
+    private OrderStatus status;
 
     public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
         Order order = Order.builder()
-                .orderStatus(OrderStatus.ORDER)
+                .status(OrderStatus.ORDER)
                 .orderDate(LocalDateTime.now())
                 .build();
         order.setMember(member);
@@ -71,13 +72,13 @@ public class Order {
 
     public void setDelivery(Delivery delivery) {
         this.delivery = delivery;
-        delivery.startDelivery(this);
+        delivery.matchingOrder(this);
     }
 
     // === business logic
 
     public void changeOrderStatus(OrderStatus orderStatus) {
-        this.orderStatus = orderStatus;
+        this.status = orderStatus;
     }
 
     public void cancel() {
