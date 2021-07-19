@@ -12,11 +12,15 @@ import jm.tp.jpashop.pt.repository.ItemRepository;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.repository.OrderRepository;
 import jm.tp.jpashop.pt.repository.OrderSearch;
+import jm.tp.jpashop.pt.web.controller.dto.OrderListResponseForm;
+import jm.tp.jpashop.pt.web.controller.dto.OrderSearchDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +57,12 @@ public class OrderService {
 
     public List<Order> findOrders(OrderSearch orderSearch) {
         return orderRepository.findAllByString(orderSearch);
+    }
+
+    public List<OrderListResponseForm> findOrders(OrderSearchDto dto) {
+        return orderRepository.findAllByString(dto.toOrderSearch())
+                .stream()
+                .map(OrderListResponseForm::create)
+                .collect(toList());
     }
 }

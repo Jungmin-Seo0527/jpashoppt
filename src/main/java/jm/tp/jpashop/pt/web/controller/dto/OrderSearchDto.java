@@ -1,6 +1,7 @@
-package jm.tp.jpashop.pt.repository;
+package jm.tp.jpashop.pt.web.controller.dto;
 
 import jm.tp.jpashop.pt.model.OrderStatus;
+import jm.tp.jpashop.pt.repository.OrderSearch;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,10 +11,16 @@ import static lombok.AccessLevel.PRIVATE;
 import static lombok.AccessLevel.PROTECTED;
 
 @Data @Builder
-@AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
-public class OrderSearch {
-
+@AllArgsConstructor(access = PRIVATE)
+public class OrderSearchDto {
     private String memberName;
     private OrderStatus orderStatus;
+
+    public OrderSearch toOrderSearch() {
+        return OrderSearch.builder()
+                .memberName(getMemberName())
+                .orderStatus(getOrderStatus())
+                .build();
+    }
 }
