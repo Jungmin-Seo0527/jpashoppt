@@ -1,7 +1,9 @@
 package jm.tp.jpashop.pt.service;
 
+import jm.tp.jpashop.pt.model.item.Book;
 import jm.tp.jpashop.pt.model.item.Item;
 import jm.tp.jpashop.pt.repository.ItemRepository;
+import jm.tp.jpashop.pt.service.dto.UpdateBookDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,12 +23,12 @@ public class ItemService {
         return item.getId();
     }
 
-    public void updateItem(Long itemId, String name, int price, int stockQuantity) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품은 존재하지 않습니다"));
-        item.setPrice(price);
-        item.setName(name);
-        item.setStockQuantity(stockQuantity);
+    @Transactional
+    public void updateItem(Long itemId, UpdateBookDto dto) {
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new IllegalArgumentException("해당 상품이 존재하지 않습니다. id=" + itemId));
+        if (item.getClass() == Book.class) {
+            ((Book) item).update(dto.getName(), dto.getPrice(), dto.getStockQuantity(), dto.getAuthor(), dto.getIsbn());
+        }
     }
 
     public List<Item> findItems() {

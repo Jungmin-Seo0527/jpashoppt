@@ -1,20 +1,18 @@
 package jm.tp.jpashop.pt.web.controller.dto;
 
 import jm.tp.jpashop.pt.model.item.Book;
-import jm.tp.jpashop.pt.model.item.Item;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import static lombok.AccessLevel.PRIVATE;
 import static lombok.AccessLevel.PROTECTED;
 
-@Getter @Setter @Builder
+@Data @Builder
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
-public class BookForm {
+public class UpdateBookForm {
 
     private Long id;
     private String name;
@@ -34,17 +32,8 @@ public class BookForm {
                 .build();
     }
 
-    public static BookForm create(Item book) {
-        return BookForm.builder()
-                .id(book.getId())
-                .name(book.getName())
-                .price(book.getPrice())
-                .stockQuantity(book.getStockQuantity())
-                .build();
-    }
-
-    public static BookForm create(Book book) {
-        return BookForm.builder()
+    public static UpdateBookForm create(Book book) {
+        return UpdateBookForm.builder()
                 .id(book.getId())
                 .name(book.getName())
                 .price(book.getPrice())

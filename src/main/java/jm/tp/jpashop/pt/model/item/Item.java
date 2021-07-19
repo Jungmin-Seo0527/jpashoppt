@@ -25,7 +25,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "dtype")
-@Getter @Setter @SuperBuilder
+@Getter @Setter(PRIVATE) @SuperBuilder
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
 public abstract class Item {
@@ -51,5 +51,11 @@ public abstract class Item {
             throw new NotEnoughStockException("need more stock");
         }
         stockQuantity = count;
+    }
+
+    public void update(String name, int price, int stockQuantity) {
+        setName(name);
+        setPrice(price);
+        setStockQuantity(stockQuantity);
     }
 }
