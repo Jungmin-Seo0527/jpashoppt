@@ -2,6 +2,7 @@ package jm.tp.jpashop.pt.service;
 
 import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.repository.MemberRepository;
+import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,14 @@ public class MemberService {
 
     @Transactional
     public Long join(Member member) {
+        validateDuplicateMember(member);
+        memberRepository.save(member);
+        return member.getId();
+    }
+
+    @Transactional
+    public Long join(MemberApiDto dto) {
+        Member member = dto.toMemberEntity();
         validateDuplicateMember(member);
         memberRepository.save(member);
         return member.getId();
