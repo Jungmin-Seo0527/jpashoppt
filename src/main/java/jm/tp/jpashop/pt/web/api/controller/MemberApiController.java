@@ -5,10 +5,14 @@ import jm.tp.jpashop.pt.web.api.dto.ApiResult;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
+import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
@@ -52,5 +56,12 @@ public class MemberApiController {
                     .body(ApiResult.failed(memberApiDto, "이름이 중복되는 회원이 존재합니다."));
         }
         return ResponseEntity.ok(ApiResult.succeed(memberApiDto));
+    }
+
+    @GetMapping("/api/members")
+    public ApiResult<List<MemberApiDto>> memberList() {
+        return ApiResult.succeed(memberService.findAll().stream()
+                .map(MemberApiDto::create)
+                .collect(toList()));
     }
 }

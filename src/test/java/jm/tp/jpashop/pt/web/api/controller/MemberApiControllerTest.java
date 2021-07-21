@@ -12,14 +12,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestConstructor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.RequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,11 +52,11 @@ class MemberApiControllerTest {
                 .build();
 
         // when
-        RequestBuilder requestBuilder = MockMvcRequestBuilders.post("/api/member4")
+        RequestBuilder requestBuilder = post("/api/member4")
                 .content(objectMapper.writeValueAsString(memberApiDto))
                 .contentType(APPLICATION_JSON)
                 .accept(APPLICATION_JSON, TEXT_PLAIN)
-                .characterEncoding(StandardCharsets.UTF_8.displayName());
+                .characterEncoding(UTF_8.displayName());
 
         // then
         mockMvc.perform(requestBuilder)
@@ -66,6 +67,48 @@ class MemberApiControllerTest {
                 .andExpect(jsonPath("$.data.address.city", is("인천")))
                 .andExpect(jsonPath("$.data.address.street", is("마장로 264번길 66")))
                 .andExpect(jsonPath("$.data.address.etc", is("경남 502동 706호")))
+                .andReturn()
+                .getResponse();
+    }
+
+    @Test
+    @DisplayName("테스트 02. 이미 존재하는 이름으로 가입을 하면 에러")
+    public void duplicateNameJoinMember() throws Exception {
+        // given
+        MemberApiDto member1 = MemberApiDto.builder()
+                .name("서정민")
+                .address(Address.builder()
+                        .city("ccc")
+                        .street("sss")
+                        .etc("111")
+                        .build())
+                .build();
+        memberService.join(member1);
+
+        MemberApiDto member2 = MemberApiDto.builder()
+                .name("서정민")
+                .address(Address.builder()
+                        .city("cccc")
+                        .street("sssss")
+                        .etc("4444")
+                        .build())
+                .build();
+        // when
+        ResultActions result = mockMvc.perform(
+                post("/api/member4")
+                        .content(objectMapper.writeValueAsString(member2))
+                        .contentType(APPLICATION_JSON)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(jsonPath("error", is("이름이 중복되는 회원이 존재합니다.")))
+                .andExpect(jsonPath("data.name", is("서정민")))
                 .andReturn()
                 .getResponse();
     }
