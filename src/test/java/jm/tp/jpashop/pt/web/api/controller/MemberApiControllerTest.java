@@ -61,7 +61,7 @@ class MemberApiControllerTest {
         // then
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(APPLICATION_JSON))
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.name", is("서정민")))
                 .andExpect(jsonPath("$.data.address.city", is("인천")))
@@ -106,7 +106,7 @@ class MemberApiControllerTest {
         // then
         result.andDo(print())
                 .andExpect(status().is4xxClientError())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
                 .andExpect(jsonPath("error", is("이름이 중복되는 회원이 존재합니다.")))
                 .andExpect(jsonPath("data.name", is("서정민")))
                 .andReturn()
