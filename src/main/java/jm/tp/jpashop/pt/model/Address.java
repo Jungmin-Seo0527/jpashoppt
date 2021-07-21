@@ -1,8 +1,10 @@
 package jm.tp.jpashop.pt.model;
 
 
+import jm.tp.jpashop.pt.model.dto.AddressUpdateInfoDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,9 +20,16 @@ import static lombok.AccessLevel.PROTECTED;
 @Getter @Setter(PRIVATE)
 @Builder
 @Embeddable
+@EqualsAndHashCode
 public class Address {
 
     private String city;
     private String street;
     private String etc;
+
+    public void updateInfo(AddressUpdateInfoDto dto) {
+        setCity(dto.getCity());
+        setStreet(dto.getStreet());
+        setStreet(dto.getStreet());
+    }
 }

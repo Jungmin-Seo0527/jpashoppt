@@ -33,7 +33,7 @@ public class MemberApiController {
         return ResponseEntity
                 .status(BAD_REQUEST)
                 .contentType(MediaType.TEXT_PLAIN)
-                .body("400 error");
+                .body("400 error!!!");
     }
 
     @PostMapping("/api/member")
@@ -87,5 +87,15 @@ public class MemberApiController {
             throw new IllegalArgumentException();
         }
         return ResponseEntity.ok(ApiResult.succeed(MemberApiDto.create(member)));
+    }
+
+    @PostMapping("/api/member/{id}")
+    public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id,
+                                                                    @RequestBody MemberApiDto memberApiDto) {
+        MemberApiDto member = memberService.update(id, memberApiDto);
+        if (member == null) {
+            throw new IllegalArgumentException("존재하지 않는 회원입니다");
+        }
+        return ResponseEntity.ok(ApiResult.succeed(member));
     }
 }

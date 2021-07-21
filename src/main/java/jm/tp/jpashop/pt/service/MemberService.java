@@ -1,6 +1,7 @@
 package jm.tp.jpashop.pt.service;
 
 import jm.tp.jpashop.pt.model.Member;
+import jm.tp.jpashop.pt.model.dto.MemberUpdateInfoDto;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
@@ -44,5 +45,15 @@ public class MemberService {
 
     public Member findOne(Long memberId) {
         return memberRepository.findById(memberId);
+    }
+
+    @Transactional
+    public MemberApiDto update(Long id, MemberApiDto memberApiDto) {
+        Member member = memberRepository.findById(id);
+        if (member == null) {
+            throw new IllegalArgumentException("존재하지 않는 회원 입니다.");
+        }
+        member.updateInfo(MemberUpdateInfoDto.create(memberApiDto));
+        return MemberApiDto.create(member);
     }
 }

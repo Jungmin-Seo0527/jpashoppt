@@ -137,3 +137,192 @@ public class Controller {
 * `@ExceptionHandler`
     * 해당 클래스 내에서 발생하는 예외를 일괄적으로 처리하는 메소드
     * 위의 코드는 데모용으로 작성한 것이고 Resolver를 이용해서 세분화된 예외 상황에 대해 각각 적절한 Response 를 날릴 수 있다.
+
+### 7.22 @DynamicUpdate
+
+사용자들이 자신의 정보를 수정고 싶은 경우가 있다. 비밀번호, 주소, 전화 번호 등등 가변의 개인정보들이 존재한다. 그리고 이는 대부분 정해져 있다. 그래서 엔티티에 `update`메소드를 만들고 `Member`
+엔티티에서 가변의 필드들만 뽑아서 `MemberUpdateInfoDto`클래스를 만들었다.
+
+* `Member`
+
+```java
+package jm.tp.jpashop.pt.model;
+
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
+
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
+
+import static lombok.AccessLevel.PRIVATE;
+import static lombok.AccessLevel.PROTECTED;
+
+@Entity
+@Getter @Builder @Setter(PRIVATE)
+@AllArgsConstructor(access = PRIVATE)
+@NoArgsConstructor(access = PROTECTED)
+public class Member {
+
+    @Id @GeneratedValue
+    @Column(name = "member_id")
+    private Long id;
+
+    private String name;
+
+    @Embedded
+    private Address address;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "member")
+    private List<Order> orders = new ArrayList<>();
+
+    public void updateInfo(MemberUpdateInfoDto dto) {
+        setName(dto.getName());
+        setAddress(dto.getAddress());
+    }
+}
+
+```
+
+* `MemberUpdateInfoDto`
+
+```java
+package jm.tp.jpashop.pt.model;
+
+import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import static lombok.AccessLevel.PRIVATE;
+import static lombok.AccessLevel.PROTECTED;
+
+@Getter @Setter(PRIVATE) @Builder
+@NoArgsConstructor(access = PROTECTED)
+@AllArgsConstructor(access = PRIVATE)
+public class MemberUpdateInfoDto {
+
+    private String name;
+    private Address address;
+
+    public static MemberUpdateInfoDto create(MemberApiDto dto) {
+        return MemberUpdateInfoDto.builder()
+                .name(dto.getName())
+                .address(Address.builder()
+                        .city(dto.getAddress().getCity())
+                        .street(dto.getAddress().getStreet())
+                        .etc(dto.getAddress().getEtc())
+                        .build())
+                .build();
+    }
+}
+
+```
+
+사용자의 이름인 `name`필드만 변경하는 요청이 온다고 가정하자. 즉 `Address`는 변하지 않는다.   
+만약 request 메세지가 변경하려는 정보만 JSON으로 들어오면 최고의 상황이겠지만 이렇게 되면 요청메시지를 받는 객체인 `MemberApiDto`에서 null 값이 생긴다. 그렇다면 모든 필드에 대해서 null
+이 아닌 필드만 수정해야 한다. 그래서 우선은 요청 메시지에 `Member`엔티티의 모든 정보를 받되, 수정하려는 정보만 수정이 되어서 전송되는 것으로 했다.
+
+그래고 `Member`엔티티에 `@DynamicUpdate` 애노테이션을 추가했다. 이는 변경된 필드(컬럼)에 대해서만 update 쿼리가 나가도록 한다. 즉 name 만 변경하기에 update 쿼리문은 name만
+나가는 것을 기대한다.
+
+* 기존에 존재하는 Member 정보
+
+```json
+{
+  "name": "서정민",
+  "address": {
+    "city": "인천",
+    "street": "마장로",
+    "etc": "264번길"
+  }
+}
+```
+
+* 이름만 수정해서 요청 메시지로 보냈다.
+
+```json
+{
+  "name": "서정민111",
+  "address": {
+    "city": "인천",
+    "street": "마장로",
+    "etc": "264번길"
+  }
+}
+```
+
+update 는 변경감지를 위해 `@Transactinal`이 존재하는 service 계층에서 엔티티 필드를 수정했다.
+
+```java
+public class Member {
+    public void updateInfo(MemberUpdateInfoDto dto) {
+        setName(dto.getName());
+        setAddress(dto.getAddress());
+    }
+}
+```
+
+```java
+public class MemberService {
+    @Transactional
+    public MemberApiDto update(Long id, MemberApiDto memberApiDto) {
+        Member member = memberRepository.findById(id);
+        if (member == null) {
+            throw new IllegalArgumentException("존재하지 않는 회원 입니다.");
+        }
+        member.updateInfo(MemberUpdateInfoDto.create(memberApiDto));
+        return MemberApiDto.create(member);
+    }
+}
+```
+
+위에서 언급한대로 Member 필드의 모든 정보를 요청으로 받되 이름은 기존과는 다른 값으로 되어 있을 것이다. 모든 필드에 대해 이전값과 이후 값을 비교 한 다음 변경된 필드만 set을 해주는 방법과 어짜피
+수정하지 않으려는 필드의 값은 기존 값 그대로 존재하니 모든 필드의 값을 dto 값으로 변경해주는 방법이 있다. 나는 후자를 선택했다.
+
+그리고 update 필드를 보면 모든 컬럼에 대한 update 쿼리가 나간다.
+
+```roomsql
+    update
+        member 
+    set
+        city=?,
+        etc=?,
+        street=?,
+        name=? 
+    where
+        member_id=?
+```
+
+이는 city, street, name 이 모두 address 객체로 묶여 있으며 `MemberApiDto`를 엔티티 변경을 위한 dto인 `MemberUpdateInfoDto`로 변경하는 과정에서 Address
+객체를 새로 할당 받아서 값을 넣었기에 JPA 입장에서는 조회할 때의 Address 주소값과 변경 후 주소값이 다르니 변경사항이 발생했다고 판단했다.
+
+그래서 `Address`클래스에 `@EqualsAndHashCode`를 추가한 후에 다시 기존의 회원의 이름만 수정했다.
+
+```roomsql
+    update
+        member 
+    set
+        name=? 
+    where
+        member_id=?
+```
+
+이제 변경 사항인 이름에 대해서만 update 쿼리가 나가는 것을 볼 수 있다. 만약 `etc`즉 상세주소만 변경되는 경우에는 어떻게 될까?
+
+객체로 묶여있는 `Address`는 위와 같은 방법으로는 하나의 필드만 변경되어도 `Address`필드인 `city`, `street`, `etc` 컬럼의 update 쿼리가 나간다.
+
+이후에 Address 필드도 Address 객체를 새로 만들어서 값을 채워 넣는 것이 아닌, 기존의 address 의 필드에 값을 넣는 방식으로 변경해도 결과는 같았다. 이 부분은 좀더 공부가 필요해 보인다.

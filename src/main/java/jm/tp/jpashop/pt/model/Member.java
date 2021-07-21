@@ -1,11 +1,14 @@
 package jm.tp.jpashop.pt.model;
 
 
+import jm.tp.jpashop.pt.model.dto.AddressUpdateInfoDto;
+import jm.tp.jpashop.pt.model.dto.MemberUpdateInfoDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicUpdate;
 
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -20,9 +23,10 @@ import static lombok.AccessLevel.PRIVATE;
 import static lombok.AccessLevel.PROTECTED;
 
 @Entity
-@Getter @Builder @Setter
+@Getter @Builder @Setter(PRIVATE)
 @AllArgsConstructor(access = PRIVATE)
 @NoArgsConstructor(access = PROTECTED)
+@DynamicUpdate
 public class Member {
 
     @Id @GeneratedValue
@@ -37,4 +41,9 @@ public class Member {
     @Builder.Default
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>();
+
+    public void updateInfo(MemberUpdateInfoDto dto) {
+        setName(dto.getName());
+        address.updateInfo(AddressUpdateInfoDto.create(dto.getAddress()));
+    }
 }
