@@ -1,11 +1,16 @@
 package jm.tp.jpashop.pt.web.api.controller;
 
+import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.service.MemberService;
 import jm.tp.jpashop.pt.web.api.dto.ApiResult;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,9 +22,19 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class MemberApiController {
 
     private final MemberService memberService;
+
+    @ExceptionHandler(value = IllegalArgumentException.class)
+    public ResponseEntity<String> handleDemoException(IllegalArgumentException e) {
+        log.error("데모용 에러 발생!!!");
+        return ResponseEntity
+                .status(BAD_REQUEST)
+                .contentType(MediaType.TEXT_PLAIN)
+                .body("400 error");
+    }
 
     @PostMapping("/api/member")
     public MemberApiDto joinMember(@RequestBody MemberApiDto memberApiDto) {
@@ -63,5 +78,14 @@ public class MemberApiController {
         return ApiResult.succeed(memberService.findAll().stream()
                 .map(MemberApiDto::create)
                 .collect(toList()));
+    }
+
+    @GetMapping("/api/member/{id}")
+    public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id) {
+        Member member = memberService.findOne(id);
+        if (member == null) {
+            throw new IllegalArgumentException();
+        }
+        return ResponseEntity.ok(ApiResult.succeed(MemberApiDto.create(member)));
     }
 }
