@@ -59,6 +59,10 @@ public class OrderApiController {
         return ApiResult.succeed(orderService.findOrders2().orElseThrow(NotExitOrderException::new));
     }
 
+    /**
+     * Repository에서 바로 DTO로 조회하는 JPQL을 작성하여 조회
+     * 각 테이블에서 원하는 컬럼만 조회할 수 있다.
+     */
     @GetMapping("/api/orders3")
     public ApiResult<List<OrderSimpleInfoDto>> orders3() {
         return ApiResult.succeed(orderService.findOrders3().orElseThrow(NotExitOrderException::new));

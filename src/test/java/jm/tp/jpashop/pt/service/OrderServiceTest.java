@@ -2,11 +2,10 @@ package jm.tp.jpashop.pt.service;
 
 import jm.tp.jpashop.pt.exception.NotEnoughStockException;
 import jm.tp.jpashop.pt.exception.NotExit;
+import jm.tp.jpashop.pt.exception.NotExitOrderException;
 import jm.tp.jpashop.pt.model.Address;
-import jm.tp.jpashop.pt.model.DeliveryStatus;
 import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.model.Order;
-import jm.tp.jpashop.pt.model.OrderStatus;
 import jm.tp.jpashop.pt.model.item.Album;
 import jm.tp.jpashop.pt.model.item.Book;
 import jm.tp.jpashop.pt.model.item.Item;
@@ -15,6 +14,7 @@ import jm.tp.jpashop.pt.repository.ItemRepository;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.repository.OrderRepository;
 import jm.tp.jpashop.pt.repository.OrderSearch;
+import jm.tp.jpashop.pt.web.api.dto.OrderSimpleInfoDto;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static jm.tp.jpashop.pt.model.DeliveryStatus.READY;
+import static jm.tp.jpashop.pt.model.OrderStatus.CANCEL;
+import static jm.tp.jpashop.pt.model.OrderStatus.ORDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -67,8 +70,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("상품 주문 - 수량이 10개가 남아 있는 상품 5개 주문")
-    public void order() {
+    @DisplayName("테스트 01. 상품 주문 - 수량이 10개가 남아 있는 상품 5개 주문")
+    public void _01_order() {
         // given
         Long memberId = createTestMember("서정민", "인천", "마장로", "264");
         Long itemId = createTestItem("JPA", 1000, 10);
@@ -81,14 +84,14 @@ class OrderServiceTest {
         // then
         assertThat(item.getStockQuantity()).isEqualTo(5);
         Order order = orderRepository.findById(orderId).orElseThrow(NotExit::new);
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.ORDER);
+        assertThat(order.getStatus()).isEqualTo(ORDER);
         assertThat(order.getDelivery().getAddress()).isSameAs(member.getAddress());
-        assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(DeliveryStatus.READY);
+        assertThat(order.getDelivery().getDeliveryStatus()).isEqualTo(READY);
     }
 
     @Test
-    @DisplayName("상품 재고를 초과하는 주문")
-    public void order2() throws Exception {
+    @DisplayName("테스트 02. 상품 재고를 초과하는 주문")
+    public void _02_order2() throws Exception {
         // given
         int itemQuantity = 10;
         Long memberId = createTestMember("서정민1", "서울", "잠실로", "234");
@@ -105,8 +108,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("주문 취소")
-    public void orderCancel() throws Exception {
+    @DisplayName("테스트 03. 주문 취소")
+    public void _03_orderCancel() throws Exception {
         // given
         int itemQuantity = 10;
         int itemBuyCount = 5;
@@ -121,12 +124,12 @@ class OrderServiceTest {
         Item item = itemRepository.findById(itemId).orElseThrow(NotExit::new);
         Order order = orderRepository.findById(orderId).orElseThrow(NotExit::new);
         assertThat(item.getStockQuantity()).isEqualTo(itemQuantity);
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCEL);
+        assertThat(order.getStatus()).isEqualTo(CANCEL);
     }
 
     @Test
-    @DisplayName("주문 취소를 하려 했으나 이미 배달 완료")
-    public void orderCancel2() throws Exception {
+    @DisplayName("테스트 04. 주문 취소를 하려 했으나 이미 배달 완료")
+    public void _04_orderCancel2() throws Exception {
         // given
         int itemQuantity = 10;
         int itemBuyCount = 5;
@@ -145,12 +148,12 @@ class OrderServiceTest {
         // then
         Item item = itemRepository.findById(itemId).orElseThrow(NotExit::new);
         assertThat(item.getStockQuantity()).isEqualTo(itemQuantity - itemBuyCount);
-        assertThat(order.getStatus()).isEqualTo(OrderStatus.ORDER);
+        assertThat(order.getStatus()).isEqualTo(ORDER);
     }
 
     @Test
-    @DisplayName("이름과 주문 상태로 주문 조회")
-    public void searchByNameAndStatus() throws Exception {
+    @DisplayName("테스트 05. 이름과 주문 상태로 주문 조회")
+    public void _05_searchByNameAndStatus() throws Exception {
         // given
         Member member1 = Member.builder().name("서정민").build();
         Long memberId = memberService.join(member1);
@@ -162,7 +165,7 @@ class OrderServiceTest {
 
         OrderSearch orderSearch = OrderSearch.builder()
                 .memberName(member1.getName())
-                .orderStatus(OrderStatus.ORDER)
+                .orderStatus(ORDER)
                 .build();
 
         // then
@@ -176,8 +179,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("이름으로만 주문하기 (주문 상태는 ORDER, CANCEL 모두 조회)")
-    public void searchByOnlyName() {
+    @DisplayName("테스트 06. 이름으로만 주문하기 (주문 상태는 ORDER, CANCEL 모두 조회)")
+    public void _06_searchByOnlyName() {
         // given
         Member member = Member.builder()
                 .name("서정민")
@@ -213,8 +216,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("주문 상태로만 주문하기 (모든 이름의 고객에 대한 주문에 대해 ORDER 상태인 주문들 모두 조회)")
-    public void searchByOnlyStatus() throws Exception {
+    @DisplayName("테스트 07. 주문 상태로만 주문하기 (모든 이름의 고객에 대한 주문에 대해 ORDER 상태인 주문들 모두 조회)")
+    public void _07_searchByOnlyStatus() throws Exception {
         // given
         Member member = Member.builder()
                 .name("서정민")
@@ -238,7 +241,7 @@ class OrderServiceTest {
 
         // when
         OrderSearch os = OrderSearch.builder()
-                .orderStatus(OrderStatus.ORDER)
+                .orderStatus(ORDER)
                 .build();
         List<Order> orders = orderService.findOrders(os);
 
@@ -250,18 +253,36 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("temp")
-    public void temp() {
-        // given
-        List<Order> orders = orderService.findOrders(OrderSearch.builder().build());
-        // when
+    @DisplayName("테스트 08. 주문 단건 조회: id로 조회했을 때 존재하는 주문")
+    public void _08_findOrderById() {
 
-        log.debug("@@@@@@@@@@@@@@@@@@" + String.valueOf(orders.size()));
-        if (orders == null) {
-            log.error("orders is null!!!!");
-        } else {
-            log.error("orders is not null!!!");
-        }
+        // given
+        Long testMemberId = createTestMember("서정민", "인천", "마장로", "264");
+        Long testItemId = createTestItem("롤", 10000, 10);
+        Long orderId = orderService.order(testMemberId, testItemId, 10);
+
+        // when
+        OrderSimpleInfoDto orderDto = orderService.findOrder(orderId);
+
         // then
+        assertThat(orderDto.getOrderId()).isEqualTo(orderId);
+        assertThat(orderDto.getMemberName()).isEqualTo("서정민");
+        assertThat(orderDto.getAddress().getCity()).isEqualTo("인천");
+        assertThat(orderDto.getAddress().getStreet()).isEqualTo("마장로");
+        assertThat(orderDto.getAddress().getEtc()).isEqualTo("264");
+        assertThat(orderDto.getOrderStatus()).isEqualTo(ORDER);
+        assertThat(orderDto.getDeliveryStatus()).isEqualTo(READY);
+    }
+
+    @Test
+    @DisplayName("테스트 09. 주문 단건 조회: 존재하지 않는 주문 조회 - NotExitOrderException 예외 발생")
+    @Transactional(readOnly = true)
+    public void _09_findNotExitOrderById() {
+        // given
+        Long noExitOrderId = -1L;
+
+        // when
+        assertThrows(NotExitOrderException.class, () -> orderService.findOrder(noExitOrderId));
+
     }
 }
