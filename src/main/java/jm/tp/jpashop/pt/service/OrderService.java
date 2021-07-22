@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -65,8 +64,20 @@ public class OrderService {
     public Optional<List<OrderSimpleInfoDto>> findOrders() {
         List<OrderSimpleInfoDto> orders = orderRepository.findAllByString(OrderSearch.builder().build()).stream()
                 .map(OrderSimpleInfoDto::new)
-                .collect(Collectors.toList());
+                .collect(toList());
         return orders.isEmpty() ? Optional.empty() : Optional.of(orders);
+    }
+
+    public Optional<List<OrderSimpleInfoDto>> findOrders2() {
+        List<OrderSimpleInfoDto> ordersDto = orderRepository.findAllWithMemberDelivery().stream()
+                .map(OrderSimpleInfoDto::new)
+                .collect(toList());
+        return ordersDto.isEmpty() ? Optional.empty() : Optional.of(ordersDto);
+    }
+
+    public Optional<List<OrderSimpleInfoDto>> findOrders3() {
+        List<OrderSimpleInfoDto> ordersDto = orderRepository.findSimpleWithMemberDelivery();
+        return ordersDto.isEmpty() ? Optional.empty() : Optional.of(ordersDto);
     }
 
     public List<Order> findOrders(OrderSearch orderSearch) {

@@ -2,6 +2,7 @@ package jm.tp.jpashop.pt;
 
 import jm.tp.jpashop.pt.model.Address;
 import jm.tp.jpashop.pt.model.Delivery;
+import jm.tp.jpashop.pt.model.DeliveryStatus;
 import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.model.Order;
 import jm.tp.jpashop.pt.model.OrderItem;
@@ -100,6 +101,7 @@ public class InitDB {
         private Delivery createDelivery(Member member) {
             return Delivery.builder()
                     .address(member.getAddress())
+                    .deliveryStatus(DeliveryStatus.READY)
                     .build();
         }
     }

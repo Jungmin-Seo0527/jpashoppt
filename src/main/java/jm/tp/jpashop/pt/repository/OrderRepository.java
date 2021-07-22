@@ -1,6 +1,7 @@
 package jm.tp.jpashop.pt.repository;
 
 import jm.tp.jpashop.pt.model.Order;
+import jm.tp.jpashop.pt.web.api.dto.OrderSimpleInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
@@ -89,5 +90,23 @@ public class OrderRepository {
         cq.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
         TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000);
         return query.getResultList();
+    }
+
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery(
+                "select o from Order o " +
+                        "join fetch o.member m " +
+                        "join fetch o.delivery d", Order.class
+        ).getResultList();
+    }
+
+    public List<OrderSimpleInfoDto> findSimpleWithMemberDelivery() {
+        String dto = "jm.tp.jpashop.pt.web.api.dto.OrderSimpleInfoDto";
+        return em.createQuery(
+                "select new " + dto + "(o.id, m.name, o.orderDate, o.status, d.deliveryStatus, d.address) " +
+                        "from Order o " +
+                        "join o.member m " +
+                        "join o.delivery d", OrderSimpleInfoDto.class
+        ).getResultList();
     }
 }

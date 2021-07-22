@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-import static lombok.AccessLevel.PRIVATE;
 import static lombok.AccessLevel.PROTECTED;
 
 /**
@@ -19,7 +18,7 @@ import static lombok.AccessLevel.PROTECTED;
  */
 @Data
 @NoArgsConstructor(access = PROTECTED)
-@AllArgsConstructor(access = PRIVATE)
+@AllArgsConstructor
 public class OrderSimpleInfoDto {
 
     private Long orderId;
