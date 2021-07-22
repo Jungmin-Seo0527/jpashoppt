@@ -56,7 +56,7 @@ public class MemberService {
     public MemberApiDto update(Long id, MemberApiDto memberApiDto) {
         Member member = memberRepository.findById(id);
         if (member == null) {
-            throw new NotExitMemberException("id:" + id + "의 회원은 존재하지 않습니다.");
+            throw new NotExitMemberException();
         }
         member.updateInfo(MemberUpdateInfoDto.create(memberApiDto));
         return MemberApiDto.create(member);

@@ -7,7 +7,6 @@ import jm.tp.jpashop.pt.web.api.dto.ApiResult;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +19,7 @@ import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.MediaType.TEXT_PLAIN;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,9 +32,9 @@ public class MemberApiController {
     public ResponseEntity<String> handleDemoException(NotExitMemberException e) {
         log.error("데모용 에러 발생!!!");
         return ResponseEntity
-                .status(BAD_REQUEST)
-                .contentType(MediaType.TEXT_PLAIN)
-                .body(e.getMessage());
+                .badRequest()
+                .contentType(TEXT_PLAIN)
+                .body(NotExitMemberException.ERROR_MESSAGE);
     }
 
     @PostMapping("/api/member")
@@ -85,7 +85,7 @@ public class MemberApiController {
     public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id) {
         Member member = memberService.findOne(id);
         if (member == null) {
-            throw new NotExitMemberException("id:" + id + "의 회원은 존재하지 않습니다.");
+            throw new NotExitMemberException();
         }
         return ResponseEntity.ok(ApiResult.succeed(MemberApiDto.create(member)));
     }

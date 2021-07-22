@@ -1,11 +1,13 @@
 package jm.tp.jpashop.pt.web.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jm.tp.jpashop.pt.exception.NotExitMemberException;
 import jm.tp.jpashop.pt.model.Address;
 import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.service.MemberService;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 @DisplayName("MemberApiController 테스트")
 @Transactional
+@Slf4j
 class MemberApiControllerTest {
 
     private final MemberService memberService;
@@ -41,7 +44,7 @@ class MemberApiControllerTest {
 
     @Test
     @DisplayName("테스트 01. 존재하지 않는 이름의 회원이 가입하면 200의 상태와 가입 회원 정보를 반환한다.")
-    void joinMemberSuccess() throws Exception {
+    void _01_joinMemberSuccess() throws Exception {
 
         // given
         MemberApiDto memberApiDto = MemberApiDto.builder()
@@ -75,7 +78,7 @@ class MemberApiControllerTest {
 
     @Test
     @DisplayName("테스트 02. 이미 존재하는 이름으로 가입을 하면 에러")
-    public void duplicateNameJoinMember() throws Exception {
+    public void _02_duplicateNameJoinMember() throws Exception {
         // given
         MemberApiDto member1 = MemberApiDto.builder()
                 .name("서정민")
@@ -118,7 +121,7 @@ class MemberApiControllerTest {
     @Test
     @DisplayName("테스트 03. 모든 회원 목록 조회 요청")
     @Transactional(readOnly = true)
-    public void memberList() throws Exception {
+    public void _03_memberList() throws Exception {
 
         // when
         ResultActions result = mockMvc.perform(
@@ -137,7 +140,7 @@ class MemberApiControllerTest {
 
     @Test
     @DisplayName("테스트 04. 특정 회원 조회")
-    public void findMemberInfo() throws Exception {
+    public void _04_findMemberInfo() throws Exception {
         // given
         Member member = Member.builder()
                 .name("서정민")
@@ -161,7 +164,7 @@ class MemberApiControllerTest {
 
     @Test
     @DisplayName("테스트 05. 존재하지 않는 id의 회원 조회")
-    public void findNoExistMemberInfo() throws Exception {
+    public void _05_findNoExistMemberInfo() throws Exception {
         // given
 
         // when
@@ -174,6 +177,116 @@ class MemberApiControllerTest {
         result.andDo(print())
                 .andExpect(status().is4xxClientError())
                 .andExpect(content().contentType(TEXT_PLAIN + ";charset=utf-8"))
-                .andExpect(content().string("id:" + notExistId + "의 회원은 존재하지 않습니다."));
+                .andExpect(content().string(NotExitMemberException.ERROR_MESSAGE));
+    }
+
+    @Test
+    @DisplayName("테스트 06. 회원 정보 수정 - 이름만 변경")
+    public void _06_updateMemberInfo() throws Exception {
+        // given
+        Member member = Member.builder()
+                .name("서정민")
+                .address(Address.builder()
+                        .city("인천")
+                        .street("마장로 264번길 66")
+                        .etc("경남 502동 706호")
+                        .build())
+                .build();
+        Long memberId = memberService.join(member);
+
+        MemberApiDto memberApiDto = MemberApiDto.create(member);
+        String updateName = "서정민1";
+        memberApiDto.setName(updateName);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                post("/api/member/" + memberId)
+                        .content(objectMapper.writeValueAsString(memberApiDto))
+                        .contentType(APPLICATION_JSON)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
+                .andExpect(jsonPath("$.data.name", is(updateName)))
+                .andExpect(jsonPath("$.data.address.city", is("인천")))
+                .andExpect(jsonPath("$.data.address.street", is("마장로 264번길 66")))
+                .andExpect(jsonPath("$.data.address.etc", is("경남 502동 706호")));
+    }
+
+    @Test
+    @DisplayName("테스트 07. 이름과 주소 모두 변경")
+    public void _07_updateMemberInfoNameAndAddress() throws Exception {
+        // given
+        Member member = Member.builder()
+                .name("서정민")
+                .address(Address.builder()
+                        .city("인천")
+                        .street("마장로 264번길 66")
+                        .etc("경남 502동 706호")
+                        .build())
+                .build();
+        Long memberId = memberService.join(member);
+
+        MemberApiDto memberApiDto = MemberApiDto.create(member);
+        String updateName = "서정민1";
+        Address updateAddress = Address.builder()
+                .city("서울")
+                .street("거리")
+                .etc("111")
+                .build();
+        memberApiDto.setName(updateName);
+        memberApiDto.setAddress(updateAddress);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                post("/api/member/" + memberId)
+                        .content(objectMapper.writeValueAsString(memberApiDto))
+                        .contentType(APPLICATION_JSON)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
+                .andExpect(jsonPath("$.data.name", is(updateName)))
+                .andExpect(jsonPath("$.data.address.city", is(updateAddress.getCity())))
+                .andExpect(jsonPath("$.data.address.street", is(updateAddress.getStreet())))
+                .andExpect(jsonPath("$.data.address.etc", is(updateAddress.getEtc())));
+    }
+
+    @Test
+    @DisplayName("테스트 08. 존재하지 않는 ID의 회원 정보 수정 요청 - 400에러")
+    public void _08_noExistMemberUpdateRequest() throws Exception {
+        // given
+        Long noExistMemberId = -1L;
+        MemberApiDto memberApiDto = MemberApiDto.builder()
+                .name("서정민")
+                .address(Address.builder()
+                        .city("인천")
+                        .street("마장로 264번길 66")
+                        .etc("경남 502동 706호")
+                        .build())
+                .build();
+
+        // when
+        ResultActions result = mockMvc.perform(
+                post("/api/member/" + noExistMemberId)
+                        .content(objectMapper.writeValueAsString(memberApiDto))
+                        .contentType(APPLICATION_JSON)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().contentType(TEXT_PLAIN + ";charset=utf-8"))
+                .andExpect(content().string(NotExitMemberException.ERROR_MESSAGE));
     }
 }

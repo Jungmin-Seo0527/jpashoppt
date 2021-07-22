@@ -30,6 +30,6 @@ public class Address {
     public void updateInfo(AddressUpdateInfoDto dto) {
         setCity(dto.getCity());
         setStreet(dto.getStreet());
-        setStreet(dto.getStreet());
+        setEtc(dto.getEtc());
     }
 }

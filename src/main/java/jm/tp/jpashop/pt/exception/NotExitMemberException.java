@@ -1,6 +1,9 @@
 package jm.tp.jpashop.pt.exception;
 
 public class NotExitMemberException extends NotExit {
+
+    public static String ERROR_MESSAGE = "400 error Not exit member";
+
     public NotExitMemberException() {
         super();
     }
