@@ -15,6 +15,7 @@ import jm.tp.jpashop.pt.repository.ItemRepository;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.repository.OrderRepository;
 import jm.tp.jpashop.pt.repository.OrderSearch;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@Slf4j
 class OrderServiceTest {
 
     @Autowired private OrderService orderService;
@@ -245,5 +247,21 @@ class OrderServiceTest {
                 .map(Order::getId)
                 .collect(Collectors.toList())
         ).contains(orderId, orderId2);
+    }
+
+    @Test
+    @DisplayName("temp")
+    public void temp() {
+        // given
+        List<Order> orders = orderService.findOrders(OrderSearch.builder().build());
+        // when
+
+        log.debug("@@@@@@@@@@@@@@@@@@" + String.valueOf(orders.size()));
+        if (orders == null) {
+            log.error("orders is null!!!!");
+        } else {
+            log.error("orders is not null!!!");
+        }
+        // then
     }
 }
