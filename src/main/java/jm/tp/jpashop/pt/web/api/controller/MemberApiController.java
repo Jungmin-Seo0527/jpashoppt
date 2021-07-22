@@ -1,5 +1,6 @@
 package jm.tp.jpashop.pt.web.api.controller;
 
+import jm.tp.jpashop.pt.exception.NotExitMemberException;
 import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.service.MemberService;
 import jm.tp.jpashop.pt.web.api.dto.ApiResult;
@@ -27,13 +28,13 @@ public class MemberApiController {
 
     private final MemberService memberService;
 
-    @ExceptionHandler(value = IllegalArgumentException.class)
-    public ResponseEntity<String> handleDemoException(IllegalArgumentException e) {
+    @ExceptionHandler(value = NotExitMemberException.class)
+    public ResponseEntity<String> handleDemoException(NotExitMemberException e) {
         log.error("데모용 에러 발생!!!");
         return ResponseEntity
                 .status(BAD_REQUEST)
                 .contentType(MediaType.TEXT_PLAIN)
-                .body("400 error!!!");
+                .body(e.getMessage());
     }
 
     @PostMapping("/api/member")
@@ -84,7 +85,7 @@ public class MemberApiController {
     public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id) {
         Member member = memberService.findOne(id);
         if (member == null) {
-            throw new IllegalArgumentException();
+            throw new NotExitMemberException("id:" + id + "의 회원은 존재하지 않습니다.");
         }
         return ResponseEntity.ok(ApiResult.succeed(MemberApiDto.create(member)));
     }
@@ -93,9 +94,6 @@ public class MemberApiController {
     public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id,
                                                                     @RequestBody MemberApiDto memberApiDto) {
         MemberApiDto member = memberService.update(id, memberApiDto);
-        if (member == null) {
-            throw new IllegalArgumentException("존재하지 않는 회원입니다");
-        }
         return ResponseEntity.ok(ApiResult.succeed(member));
     }
 }
