@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.Embeddable;
 
@@ -21,6 +22,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Builder
 @Embeddable
 @EqualsAndHashCode
+@ToString
 public class Address {
 
     private String city;
