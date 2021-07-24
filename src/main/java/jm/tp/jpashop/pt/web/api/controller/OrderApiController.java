@@ -76,15 +76,31 @@ public class OrderApiController {
 
     /**
      * Order객체로 조회후에 OrderItemListResponseDto로 변환
-     * N + 1 문제는 batch size 설정으로 N에 대한 쿼리문을 where in 절로 하나로 만듦
+     * N + 1 문제는 batch size 설정으로 N에 대한 쿼리문을 where in 절로 하나로 만듦(orderItem 엔티티 -> item)
+     * 쿼리문: 4개
      */
     @GetMapping("/api/orderItems/{id}")
     public ApiResult<OrderItemListResponseDto> findOrderList(@PathVariable Long id) {
         return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList(id).orElseThrow(NotExitOrderException::new)));
     }
 
+    /**
+     * 페치조인으로 위의 메서드의 쿼리문 4개를 1개로 만듦
+     */
     @GetMapping("/api/orderItems2/{id}")
     public ApiResult<OrderItemListResponseDto> findOrderList2(@PathVariable Long id) {
         return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList2(id).orElseThrow(NotExitOrderException::new)));
+    }
+
+
+    // TODO: 2021-07-24 DTO 조회
+
+    /**
+     * Repository계층에서 join 을 이용해 DTO로 바로 조회하기
+     */
+    @GetMapping("/api/orderItems3/{id}")
+    public ApiResult<OrderItemListResponseDto> findOrderList3(@PathVariable Long id) {
+
+        return null;
     }
 }

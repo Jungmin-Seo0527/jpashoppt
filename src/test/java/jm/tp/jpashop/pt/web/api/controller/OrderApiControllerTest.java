@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jm.tp.jpashop.pt.exception.NotExitOrderException;
 import jm.tp.jpashop.pt.model.Address;
 import jm.tp.jpashop.pt.model.Member;
+import jm.tp.jpashop.pt.model.OrderItem;
 import jm.tp.jpashop.pt.model.item.Book;
 import jm.tp.jpashop.pt.model.item.Item;
 import jm.tp.jpashop.pt.service.ItemService;
@@ -80,7 +81,7 @@ class OrderApiControllerTest {
 
     @Test
     @DisplayName("테스트 01. 주문 단건 조회 - 조회 성공: 주문 정보 반환")
-    public void findOrder() throws Exception {
+    public void _01_findOrder() throws Exception {
         Member member = createTestMember();
         Book item = (Book) createTestItem();
         Long orderId = orderService.order(member.getId(), item.getId(), 10);
@@ -107,7 +108,7 @@ class OrderApiControllerTest {
 
     @Test
     @DisplayName("테스트 02. 주문 단건 조회 - 조회 실패: 존재하지 않는 주문")
-    public void findNoExitOrderNoExitException() throws Exception {
+    public void _02_findNoExitOrderNoExitException() throws Exception {
         // given
         Long noExitOrderId = -1L;
 
@@ -115,6 +116,64 @@ class OrderApiControllerTest {
         ResultActions result = mockMvc.perform(
                 get("/api/order/" + noExitOrderId)
                         .accept(APPLICATION_JSON)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().contentType(TEXT_PLAIN + ";charset=utf-8"))
+                .andExpect(content().string(NotExitOrderException.ERROR_MESSAGE))
+                .andReturn();
+    }
+
+    // TODO: 2021-07-24 주문 상품 리스트 API 테스트 코드
+
+    /**
+     * 장바구니 기능의 부재로 service 계층에서 여러 상품을 한번에 주문 불가능
+     */
+    @Test
+    @DisplayName("테스트 03. 주문 단건 조회(주문 상품 목록까지 조회) - 조회 성공")
+    public void _03_findOrderItemsByOrderId() throws Exception {
+        // given
+        Member member = createTestMember();
+        Book item1 = (Book) createTestItem();
+        Book item2 = (Book) createTestItem();
+        Book item3 = (Book) createTestItem();
+
+        OrderItem orderItem1 = OrderItem.createOrderItem(item1, item1.getPrice(), 10);
+        OrderItem orderItem2 = OrderItem.createOrderItem(item2, item2.getPrice(), 11);
+        OrderItem orderItem3 = OrderItem.createOrderItem(item3, item3.getPrice(), 13);
+
+        Long orderId = orderService.order(member.getId(), orderItem1, orderItem2, orderItem3);
+
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/orderItems2/" + orderId)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
+                .andExpect(jsonPath("$.data.orderId", is(orderId.intValue())))
+                .andExpect(jsonPath("$.data.memberName", is(member.getName())))
+                .andReturn();
+    }
+
+    @Test
+    @DisplayName("테스트 04. 주문 단건 조회(주문 상품 목록까지 조회) - 조회 실패: 존재하지 않는 주문")
+    public void _04_findNotExitOrderItemsById() throws Exception {
+        // given
+        Long notExitOrderId = -1L;
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/orderItems2/" + notExitOrderId)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
                         .characterEncoding(UTF_8.displayName())
         );
 

@@ -8,7 +8,12 @@ import org.springframework.util.StringUtils;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +33,7 @@ public class OrderRepository {
     }
 
     public Optional<Order> findOrderItemsById(Long id) {
-        return Optional.ofNullable(em.createQuery(
+        return em.createQuery(
                 "select o from Order o " +
                         "join fetch o.member m " +
                         "join fetch o.delivery d " +
@@ -36,7 +41,9 @@ public class OrderRepository {
                         "join fetch oi.item i " +
                         "where o.id = :id ", Order.class)
                 .setParameter("id", id)
-                .getSingleResult());
+                .getResultList()
+                .stream()
+                .findFirst();
     }
 
     public List<Order> findAllByString(OrderSearch orderSearch) {
