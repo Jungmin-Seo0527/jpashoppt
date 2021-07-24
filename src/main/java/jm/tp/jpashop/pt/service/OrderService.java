@@ -52,6 +52,29 @@ public class OrderService {
         return order.getId();
     }
 
+    /**
+     * 장바구니 기능 프로토 버전
+     * 여러 상품을 장바구니에 저장한 후에 일괄적 주문 기능
+     *
+     * @param memberId
+     * @param orderItem
+     * @return
+     */
+    @Transactional
+    public Long order(Long memberId, OrderItem... orderItem) {
+        Member member = memberRepository.findById(memberId);
+
+        Delivery delivery = Delivery.builder()
+                .address(member.getAddress())
+                .deliveryStatus(DeliveryStatus.READY)
+                .build();
+
+        Order order = Order.createOrder(member, delivery, orderItem);
+        orderRepository.save(order);
+
+        return order.getId();
+    }
+
     @Transactional
     public void cancel(Long orderId) {
         orderRepository.findById(orderId).orElseThrow(NotExitOrderException::new).cancel();
@@ -59,6 +82,14 @@ public class OrderService {
 
     public OrderSimpleInfoDto findOrder(Long id) {
         return new OrderSimpleInfoDto(orderRepository.findById(id).orElseThrow(NotExitOrderException::new));
+    }
+
+    public Optional<Order> findOrderItemList(Long id) {
+        return orderRepository.findById(id);
+    }
+
+    public Optional<Order> findOrderItemList2(Long id) {
+        return orderRepository.findOrderItemsById(id);
     }
 
     public Optional<List<OrderSimpleInfoDto>> findOrders() {

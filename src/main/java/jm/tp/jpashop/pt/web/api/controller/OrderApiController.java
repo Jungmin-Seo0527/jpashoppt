@@ -3,6 +3,7 @@ package jm.tp.jpashop.pt.web.api.controller;
 import jm.tp.jpashop.pt.exception.NotExitOrderException;
 import jm.tp.jpashop.pt.service.OrderService;
 import jm.tp.jpashop.pt.web.api.dto.ApiResult;
+import jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto;
 import jm.tp.jpashop.pt.web.api.dto.OrderSimpleInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,5 +72,19 @@ public class OrderApiController {
     @GetMapping("/api/order/{id}")
     public ApiResult<OrderSimpleInfoDto> orders(@PathVariable Long id) {
         return ApiResult.succeed(orderService.findOrder(id));
+    }
+
+    /**
+     * Order객체로 조회후에 OrderItemListResponseDto로 변환
+     * N + 1 문제는 batch size 설정으로 N에 대한 쿼리문을 where in 절로 하나로 만듦
+     */
+    @GetMapping("/api/orderItems/{id}")
+    public ApiResult<OrderItemListResponseDto> findOrderList(@PathVariable Long id) {
+        return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList(id).orElseThrow(NotExitOrderException::new)));
+    }
+
+    @GetMapping("/api/orderItems2/{id}")
+    public ApiResult<OrderItemListResponseDto> findOrderList2(@PathVariable Long id) {
+        return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList2(id).orElseThrow(NotExitOrderException::new)));
     }
 }

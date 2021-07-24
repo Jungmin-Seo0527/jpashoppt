@@ -27,6 +27,18 @@ public class OrderRepository {
         return Optional.ofNullable(em.find(Order.class, id));
     }
 
+    public Optional<Order> findOrderItemsById(Long id) {
+        return Optional.ofNullable(em.createQuery(
+                "select o from Order o " +
+                        "join fetch o.member m " +
+                        "join fetch o.delivery d " +
+                        "join fetch o.orderItems oi " +
+                        "join fetch oi.item i " +
+                        "where o.id = :id ", Order.class)
+                .setParameter("id", id)
+                .getSingleResult());
+    }
+
     public List<Order> findAllByString(OrderSearch orderSearch) {
         String jpql = "select o from Order o join o.member m";
         boolean isFirstCondition = true;
