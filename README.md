@@ -2,7 +2,9 @@
 
 ## 참고 블로그
 
-[스프링 부트 테스트](https://brunch.co.kr/@springboot/207)
+* [스프링 부트 테스트](https://brunch.co.kr/@springboot/207)
+* [Spring Guide - 예외 처리 전략](https://www.popit.kr/spring-guide-%EC%97%90%EC%99%B8-%EC%B2%98%EB%A6%AC-%EC%A0%84%EB%9E%B5/)
+* [IntelliJ 디버깅 해보기](https://jojoldu.tistory.com/149)
 
 ## 이슈
 
@@ -326,3 +328,98 @@ public class MemberService {
 객체로 묶여있는 `Address`는 위와 같은 방법으로는 하나의 필드만 변경되어도 `Address`필드인 `city`, `street`, `etc` 컬럼의 update 쿼리가 나간다.
 
 이후에 Address 필드도 Address 객체를 새로 만들어서 값을 채워 넣는 것이 아닌, 기존의 address 의 필드에 값을 넣는 방식으로 변경해도 결과는 같았다. 이 부분은 좀더 공부가 필요해 보인다.
+
+### 7.24 데이터가 존재하지 않을 때 em.createQuery -> getSingleResult(), getResultList() 차이점
+
+em.create에서 반환 타입을 single object, list 로 선택이 가능하다. 그런데 이 둘은 조회한 데이터가 존재하지 않을 때 큰 차이점이 존재한다.
+
+```java
+public class OrderRepository {
+    public Optional<Order> findOrderItemsById(Long id) {
+        return Optional.ofNullable(em.createQuery(
+                "select o from Order o " +
+                        "join fetch o.member m " +
+                        "join fetch o.delivery d " +
+                        "join fetch o.orderItems oi " +
+                        "join fetch oi.item i " +
+                        "where o.id = :id ", Order.class)
+                .setParameter("id", id)
+                .getSingleResult());
+    }
+}
+```
+
+위 코드의 의도는 만약 조회한 데이터가 존재하지 않으면 null값을 반환하기를 기대했다. 그래서 컨트롤러 계층에서 예외를 `@ExceptionHandler`에게 던저 주려고 했다. 하지만 위의 코드는 null값을
+반환하는 것이 아닌 그 전에 예외를 터뜨린다.
+
+#### em.createQuery("...").getSingleResult()
+
+```java
+public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
+    @Override
+    public R getSingleResult() {
+        try {
+            final List<R> list = list();
+            if (list.size() == 0) {
+                throw new NoResultException("No entity found for query");
+            }
+            return uniqueElement(list);
+        } catch (HibernateException e) {
+            throw getExceptionConverter().convert(e, getLockOptions());
+        }
+    }
+}
+```
+
+* 예외 메세지
+
+```
+javax.persistence.NoResultException: No entity found for query
+```
+
+누가 봐도 쿼리로 찾고자 하는 엔티티가 존재하지 않아서 예외를 터뜨리는 모습이다.   
+코드를 보면 쿼리의 결과를 `List`로 받는데 `if(list.size() == 0)`으로 `NoResultException`을 터뜨려 버린다. 그렇다면 `getResultList()`는 어떨까???
+
+#### em.createQuery("...").getResultList()
+
+```java
+public class ProcedureCallImpl<R>
+        extends AbstractProducedQuery<R>
+        implements ProcedureCallImplementor<R>, ResultContext {
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<R> getResultList() {
+        if (getMaxResults() == 0) {
+            return Collections.EMPTY_LIST;
+        }
+        try {
+            final Output rtn = outputs().getCurrent();
+            if (!ResultSetOutput.class.isInstance(rtn)) {
+                throw new IllegalStateException("Current CallableStatement ou was not a ResultSet, but getResultList was called");
+            }
+
+            return ((ResultSetOutput) rtn).getResultList();
+        } catch (NoMoreReturnsException e) {
+            // todo : the spec is completely silent on these type of edge-case scenarios.
+            // Essentially here we'd have a case where there are no more results (ResultSets nor updateCount) but
+            // getResultList was called.
+            return null;
+        } catch (HibernateException he) {
+            throw getExceptionConverter().convert(he);
+        } catch (RuntimeException e) {
+            getProducer().markForRollbackOnly();
+            throw e;
+        }
+    }
+}
+```
+
+위 코드까지 보면 `getMaxResults() == 0`인 경우에 `Collections.EMPTY_LIST`를 반환한다.   
+여기서 `getMaxResult()`는 `maxRow`값을 반환한다. 즉 `getMaxResult() == 0`은 데이터가 0개가 조회되어 row 값의 max 값이 0이라는 의미이다.
+
+> 결론    
+> em.creatQuery에서 데이터가 존재하지 않을때 반환값
+> * `getSingleResult()`: `NoResultException`
+> * `getResultList()`: `Collections.EMPTY_LIST`;
+
+## Note
