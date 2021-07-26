@@ -20,9 +20,9 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+import static java.util.Arrays.stream;
 import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.FetchType.LAZY;
 import static lombok.AccessLevel.PRIVATE;
@@ -59,6 +59,8 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    private int totalPrice;
+
     public static Order createOrder(Member member, Delivery delivery, OrderItem... orderItems) {
         Order order = Order.builder()
                 .status(OrderStatus.ORDER)
@@ -67,7 +69,11 @@ public class Order {
         order.setMember(member);
         order.setDelivery(delivery);
 
-        Arrays.stream(orderItems).forEach(order::addOrderItem);
+        stream(orderItems).forEach(order::addOrderItem);
+        order.setTotalPrice(stream(orderItems)
+                .mapToInt(OrderItem::getTotalPrice)
+                .sum());
+
         return order;
     }
 

@@ -12,6 +12,7 @@ import jm.tp.jpashop.pt.repository.ItemRepository;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.repository.OrderRepository;
 import jm.tp.jpashop.pt.repository.OrderSearch;
+import jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto;
 import jm.tp.jpashop.pt.web.api.dto.OrderSimpleInfoDto;
 import jm.tp.jpashop.pt.web.controller.dto.OrderListResponseForm;
 import jm.tp.jpashop.pt.web.controller.dto.OrderSearchDto;
@@ -90,6 +91,10 @@ public class OrderService {
 
     public Optional<Order> findOrderItemList2(Long id) {
         return orderRepository.findOrderItemsById(id);
+    }
+
+    public Optional<OrderItemListResponseDto> findOrderItemList3(Long id) {
+        return orderRepository.findOrderItemsByIdForDto(id);
     }
 
     public Optional<List<OrderSimpleInfoDto>> findOrders() {

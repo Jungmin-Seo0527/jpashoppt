@@ -1,6 +1,9 @@
 package jm.tp.jpashop.pt.repository;
 
+import jm.tp.jpashop.pt.exception.NotExitOrderException;
 import jm.tp.jpashop.pt.model.Order;
+import jm.tp.jpashop.pt.web.api.dto.OrderItemDto;
+import jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto;
 import jm.tp.jpashop.pt.web.api.dto.OrderSimpleInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -43,6 +46,38 @@ public class OrderRepository {
                 .setParameter("id", id)
                 .getResultList()
                 .stream()
+                .findFirst();
+    }
+
+    public Optional<OrderItemListResponseDto> findOrderItemsByIdForDto(Long id) {
+        Optional<OrderItemListResponseDto> orderItemListResponseDto = findOnlyOrderInfoById(id);
+        orderItemListResponseDto.orElseThrow(NotExitOrderException::new)
+                .setOrderItemList(getOrderItemDtoListByOrderId(id));
+        return orderItemListResponseDto;
+    }
+
+    private List<OrderItemDto> getOrderItemDtoListByOrderId(Long id) {
+        String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemDto";
+        List<OrderItemDto> orderItemDtoList = em.createQuery(
+                "select new " + root + "(i.id, i.name, oi.orderPrice, oi.count, oi.totalOrderPrice) " +
+                        "from Order o " +
+                        "join o.orderItems oi " +
+                        "join oi.item i " +
+                        "where o.id = :id", OrderItemDto.class)
+                .setParameter("id", id)
+                .getResultList();
+        return orderItemDtoList;
+    }
+
+    private Optional<OrderItemListResponseDto> findOnlyOrderInfoById(Long id) {
+        String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto";
+        return em.createQuery(
+                "select new " + root + "(o.id, m.name, o.orderDate, o.totalPrice) " +
+                        "from Order o " +
+                        "join o.member m " +
+                        "where o.id = :id", OrderItemListResponseDto.class)
+                .setParameter("id", id)
+                .getResultStream()
                 .findFirst();
     }
 

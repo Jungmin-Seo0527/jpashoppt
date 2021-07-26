@@ -127,8 +127,6 @@ class OrderApiControllerTest {
                 .andReturn();
     }
 
-    // TODO: 2021-07-24 주문 상품 리스트 API 테스트 코드
-
     /**
      * 장바구니 기능의 부재로 service 계층에서 여러 상품을 한번에 주문 불가능
      */

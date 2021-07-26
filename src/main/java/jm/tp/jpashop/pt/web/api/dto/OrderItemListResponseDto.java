@@ -43,4 +43,12 @@ public class OrderItemListResponseDto {
 
         return dto;
     }
+
+    public OrderItemListResponseDto(Long orderId, String memberName, LocalDateTime orderDate, int totalPrice) {
+        this.orderId = orderId;
+        this.memberName = memberName;
+        this.orderDate = orderDate;
+        this.totalPrice = totalPrice;
+    }
+
 }

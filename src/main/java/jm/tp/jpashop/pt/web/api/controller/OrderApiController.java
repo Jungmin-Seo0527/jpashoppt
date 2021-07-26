@@ -92,15 +92,15 @@ public class OrderApiController {
         return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList2(id).orElseThrow(NotExitOrderException::new)));
     }
 
-
-    // TODO: 2021-07-24 DTO 조회
-
     /**
      * Repository계층에서 join 을 이용해 DTO로 바로 조회하기
+     * 쿼리문 2개 - OrderItemListResponseDto에서 OrderItemDto를 리스트로 가지고 있다.
+     * 일대다 관계의 엔티티인 OrderItem을 DTO로 따로 조회해서 OrderItemListResponseDto의 OrderItemDtoList에 setting 하는 추가 과정이 필요
+     * 4개의 테이블에서 데이터 조회 (Member, Order, OrderItem, Item)
+     * 쿼리문 2개
      */
     @GetMapping("/api/orderItems3/{id}")
     public ApiResult<OrderItemListResponseDto> findOrderList3(@PathVariable Long id) {
-
-        return null;
+        return ApiResult.succeed(orderService.findOrderItemList3(id).orElseThrow(NotExitOrderException::new));
     }
 }
