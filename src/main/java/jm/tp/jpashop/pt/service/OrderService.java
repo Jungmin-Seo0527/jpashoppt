@@ -116,6 +116,10 @@ public class OrderService {
         return ordersDto.isEmpty() ? Optional.empty() : Optional.of(ordersDto);
     }
 
+    public List<OrderItemListResponseDto> findOrders4() {
+        return orderRepository.findOrderAndOrderItemsByOrderId();
+    }
+
     public List<Order> findOrders(OrderSearch orderSearch) {
         return orderRepository.findAllByString(orderSearch);
     }

@@ -158,10 +158,14 @@ class OrderServiceTest {
         Member member1 = Member.builder().name("서정민").build();
         Long memberId = memberService.join(member1);
 
-        List<Item> items = itemService.findItems();
+        Book item = Book.builder()
+                .name("책1")
+                .stockQuantity(100)
+                .build();
+        itemService.saveItem(item);
 
         // when
-        Long orderId = orderService.order(memberId, items.get(0).getId(), 10);
+        Long orderId = orderService.order(memberId, item.getId(), 10);
 
         OrderSearch orderSearch = OrderSearch.builder()
                 .memberName(member1.getName())

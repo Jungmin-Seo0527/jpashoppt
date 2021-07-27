@@ -1,5 +1,6 @@
 package jm.tp.jpashop.pt.web.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jm.tp.jpashop.pt.model.OrderItem;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +14,8 @@ import static lombok.AccessLevel.PROTECTED;
 @AllArgsConstructor
 public class OrderItemDto {
 
+    @JsonIgnore
+    private Long orderId;
     private Long itemId;
     private String itemName;
     private int orderPrice;
@@ -27,5 +30,13 @@ public class OrderItemDto {
                 .orderCount(orderItem.getCount())
                 .totalPrice(orderItem.getTotalPrice())
                 .build();
+    }
+
+    public OrderItemDto(Long itemId, String itemName, int orderPrice, int orderCount, int totalPrice) {
+        this.itemId = itemId;
+        this.itemName = itemName;
+        this.orderPrice = orderPrice;
+        this.orderCount = orderCount;
+        this.totalPrice = totalPrice;
     }
 }

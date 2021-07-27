@@ -50,7 +50,6 @@ class ItemServiceTest {
         // then
         List<Item> items = itemService.findItems();
         assertThat(items).contains(book, album, movie);
-        assertThat(items.size()).isEqualTo(7);
     }
 
     @Test

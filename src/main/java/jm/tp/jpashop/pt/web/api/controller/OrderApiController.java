@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+import static jm.tp.jpashop.pt.web.api.dto.ApiResult.failed;
+import static jm.tp.jpashop.pt.web.api.dto.ApiResult.succeed;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
 
 /**
@@ -49,7 +51,7 @@ public class OrderApiController {
      */
     @GetMapping("/api/orders")
     public ApiResult<List<OrderSimpleInfoDto>> orders() {
-        return ApiResult.succeed(orderService.findOrders().orElseThrow(NotExitOrderException::new));
+        return succeed(orderService.findOrders().orElseThrow(NotExitOrderException::new));
     }
 
     /**
@@ -57,7 +59,7 @@ public class OrderApiController {
      */
     @GetMapping("/api/orders2")
     public ApiResult<List<OrderSimpleInfoDto>> orders2() {
-        return ApiResult.succeed(orderService.findOrders2().orElseThrow(NotExitOrderException::new));
+        return succeed(orderService.findOrders2().orElseThrow(NotExitOrderException::new));
     }
 
     /**
@@ -66,12 +68,22 @@ public class OrderApiController {
      */
     @GetMapping("/api/orders3")
     public ApiResult<List<OrderSimpleInfoDto>> orders3() {
-        return ApiResult.succeed(orderService.findOrders3().orElseThrow(NotExitOrderException::new));
+        return succeed(orderService.findOrders3().orElseThrow(NotExitOrderException::new));
+    }
+
+    /**
+     * 전체 조회(Order)를 DTO로 조회
+     * 일대다 관계의 OrderItem을 DTO로 조회를 한 후에 orderId를 기준으로 매핑
+     */
+    @GetMapping("/api/orders4")
+    public ApiResult<List<OrderItemListResponseDto>> orders4() {
+        List<OrderItemListResponseDto> orders = orderService.findOrders4();
+        return orders.isEmpty() ? failed(orders, NotExitOrderException.ERROR_MESSAGE) : succeed(orders);
     }
 
     @GetMapping("/api/order/{id}")
     public ApiResult<OrderSimpleInfoDto> orders(@PathVariable Long id) {
-        return ApiResult.succeed(orderService.findOrder(id));
+        return succeed(orderService.findOrder(id));
     }
 
     /**
@@ -81,7 +93,7 @@ public class OrderApiController {
      */
     @GetMapping("/api/orderItems/{id}")
     public ApiResult<OrderItemListResponseDto> findOrderList(@PathVariable Long id) {
-        return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList(id).orElseThrow(NotExitOrderException::new)));
+        return succeed(OrderItemListResponseDto.create(orderService.findOrderItemList(id).orElseThrow(NotExitOrderException::new)));
     }
 
     /**
@@ -89,7 +101,7 @@ public class OrderApiController {
      */
     @GetMapping("/api/orderItems2/{id}")
     public ApiResult<OrderItemListResponseDto> findOrderList2(@PathVariable Long id) {
-        return ApiResult.succeed(OrderItemListResponseDto.create(orderService.findOrderItemList2(id).orElseThrow(NotExitOrderException::new)));
+        return succeed(OrderItemListResponseDto.create(orderService.findOrderItemList2(id).orElseThrow(NotExitOrderException::new)));
     }
 
     /**
@@ -101,6 +113,6 @@ public class OrderApiController {
      */
     @GetMapping("/api/orderItems3/{id}")
     public ApiResult<OrderItemListResponseDto> findOrderList3(@PathVariable Long id) {
-        return ApiResult.succeed(orderService.findOrderItemList3(id).orElseThrow(NotExitOrderException::new));
+        return succeed(orderService.findOrderItemList3(id).orElseThrow(NotExitOrderException::new));
     }
 }
