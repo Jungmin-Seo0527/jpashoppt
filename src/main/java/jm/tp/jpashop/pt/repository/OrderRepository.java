@@ -90,25 +90,35 @@ public class OrderRepository {
      * 재사용 가능했을 것이다.
      * <p>
      * 주문을 전체 조회후 id를 따로 추출하여 orderItem을 orderid에 맞게 조회하여 매핑후 setting
-     *
-     * @param id
-     * @return
      */
     public List<OrderItemListResponseDto> findOrderAndOrderItemsByOrderId() {
+        List<OrderItemListResponseDto> result = getOrderItemListWithoutOrderItems();
+
+        Map<Long, List<OrderItemDto>> orderItemMap = mappingOrderItemsByOrderId(getOrderIds(result));
+
+        result.forEach(o -> o.setOrderItemList(orderItemMap.get(o.getOrderId())));
+        return result;
+    }
+
+    private List<OrderItemListResponseDto> getOrderItemListWithoutOrderItems() {
         String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto";
-        List<OrderItemListResponseDto> result = em.createQuery(
+        return em.createQuery(
                 "select new " + root + "(o.id, m.name, o.orderDate, o.totalPrice) " +
                         "from Order o " +
                         "join o.member m ", OrderItemListResponseDto.class)
                 .getResultList();
+    }
 
-        List<Long> orderIdList = result.stream()
+    private List<Long> getOrderIds(List<OrderItemListResponseDto> result) {
+        return result.stream()
                 .map(OrderItemListResponseDto::getOrderId)
                 .collect(Collectors.toList());
+    }
 
-        String root2 = "jm.tp.jpashop.pt.web.api.dto.OrderItemDto";
-        Map<Long, List<OrderItemDto>> map = em.createQuery(
-                "select new " + root2 + "(o.id, i.id, i.name, oi.orderPrice, oi.count, oi.totalOrderPrice) " +
+    private Map<Long, List<OrderItemDto>> mappingOrderItemsByOrderId(List<Long> orderIdList) {
+        String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemDto";
+        return em.createQuery(
+                "select new " + root + "(o.id, i.id, i.name, oi.orderPrice, oi.count, oi.totalOrderPrice) " +
                         "from Order o " +
                         "join o.orderItems oi " +
                         "join oi.item i " +
@@ -116,9 +126,6 @@ public class OrderRepository {
                 .setParameter("orderId", orderIdList)
                 .getResultStream()
                 .collect(Collectors.groupingBy(OrderItemDto::getOrderId));
-
-        result.forEach(o -> o.setOrderItemList(map.get(o.getOrderId())));
-        return result;
     }
 
     public List<Order> findAllByString(OrderSearch orderSearch) {
