@@ -182,4 +182,61 @@ class OrderApiControllerTest {
                 .andExpect(content().string(NotExitOrderException.ERROR_MESSAGE))
                 .andReturn();
     }
+
+    @Test
+    @DisplayName("테스트 05. 주문 단건 조회(Repository 계층에서 DTO로 조회) - 조회 성공")
+    public void _05_findOrderItemsByOrderIdSelectByDtoInRepository() throws Exception {
+        // given
+        Member member = createTestMember();
+        Book item1 = (Book) createTestItem();
+        Book item2 = (Book) createTestItem();
+        Book item3 = (Book) createTestItem();
+
+        OrderItem orderItem1 = OrderItem.createOrderItem(item1, item1.getPrice(), 10);
+        OrderItem orderItem2 = OrderItem.createOrderItem(item2, item2.getPrice(), 11);
+        OrderItem orderItem3 = OrderItem.createOrderItem(item3, item3.getPrice(), 13);
+
+        Long orderId = orderService.order(member.getId(), orderItem1, orderItem2, orderItem3);
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/orderItems3/" + orderId)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
+                .andExpect(jsonPath("$.data.orderId", is(orderId.intValue())))
+                .andExpect(jsonPath("$.data.memberName", is(member.getName())))
+                .andExpect(jsonPath("$.data.orderItemList[0].itemId", is(orderItem1.getItem().getId().intValue())))
+                .andExpect(jsonPath("$.data.orderItemList[0].itemName", is(item1.getName())))
+                .andExpect(jsonPath("$.data.orderItemList[0].orderPrice", is(item1.getPrice())))
+                .andExpect(jsonPath("$.data.orderItemList[0].orderCount", is(10)))
+                .andExpect(jsonPath("$.data.orderItemList[0].totalPrice", is(item1.getPrice() * 10)))
+                .andReturn();
+    }
+
+    @Test
+    @DisplayName("테스트 06. 주문 단건 조회(Repository 계층에서 DTO로 조회) - 조회 실패(존재하지 않는 주문)")
+    public void _06_test() throws Exception {
+        // given
+        Long notExitOrderId = -1L;
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/orderItems3/" + notExitOrderId)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().contentType(TEXT_PLAIN + ";charset=utf-8"))
+                .andExpect(content().string(NotExitOrderException.ERROR_MESSAGE))
+                .andReturn();
+    }
 }
