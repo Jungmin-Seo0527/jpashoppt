@@ -5,6 +5,7 @@ import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.model.dto.MemberUpdateInfoDto;
 import jm.tp.jpashop.pt.repository.MemberRepository;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
+import jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.util.List;
 public class MemberService {
 
     private final MemberRepository memberRepository;
+    private final OrderService orderService;
 
     @Transactional
     public Long join(Member member) {
@@ -60,5 +62,9 @@ public class MemberService {
         }
         member.updateInfo(MemberUpdateInfoDto.create(memberApiDto));
         return MemberApiDto.create(member);
+    }
+
+    public List<OrderItemListResponseDto> findOrdersDetailInfoById(Long id) {
+        return orderService.findOrderItemsByMemberId(id);
     }
 }

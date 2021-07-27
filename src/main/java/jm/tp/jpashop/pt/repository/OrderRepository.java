@@ -60,7 +60,7 @@ public class OrderRepository {
 
     private List<OrderItemDto> getOrderItemDtoListByOrderId(Long id) {
         String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemDto";
-        List<OrderItemDto> orderItemDtoList = em.createQuery(
+        return em.createQuery(
                 "select new " + root + "(i.id, i.name, oi.orderPrice, oi.count, oi.totalOrderPrice) " +
                         "from Order o " +
                         "join o.orderItems oi " +
@@ -68,7 +68,6 @@ public class OrderRepository {
                         "where o.id = :id", OrderItemDto.class)
                 .setParameter("id", id)
                 .getResultList();
-        return orderItemDtoList;
     }
 
     private Optional<OrderItemListResponseDto> findOnlyOrderInfoById(Long id) {
@@ -100,12 +99,33 @@ public class OrderRepository {
         return result;
     }
 
+    /**
+     * 회원의 아이디로 모든 주문 기록 조회
+     */
+    public List<OrderItemListResponseDto> findOrderAndOrderItemsByMemberId(Long id) {
+        List<OrderItemListResponseDto> result = getOrderItemListWithoutOrderItemsByMemberId(id);
+        Map<Long, List<OrderItemDto>> orderItemMap = mappingOrderItemsByOrderId(getOrderIds(result));
+        result.forEach(o -> o.setOrderItemList(orderItemMap.get(o.getOrderId())));
+        return result;
+    }
+
     private List<OrderItemListResponseDto> getOrderItemListWithoutOrderItems() {
         String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto";
         return em.createQuery(
                 "select new " + root + "(o.id, m.name, o.orderDate, o.totalPrice) " +
                         "from Order o " +
                         "join o.member m ", OrderItemListResponseDto.class)
+                .getResultList();
+    }
+
+    private List<OrderItemListResponseDto> getOrderItemListWithoutOrderItemsByMemberId(Long memberId) {
+        String root = "jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto";
+        return em.createQuery(
+                "select new " + root + "(o.id, m.name, o.orderDate, o.totalPrice) " +
+                        "from Member m " +
+                        "join m.orders o " +
+                        "where m.id = :id", OrderItemListResponseDto.class)
+                .setParameter("id", memberId)
                 .getResultList();
     }
 

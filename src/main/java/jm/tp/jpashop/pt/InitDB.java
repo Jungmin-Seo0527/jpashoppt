@@ -15,14 +15,7 @@ import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 
 /**
- * 총 주문 2개 <br>
- * * userA <br>
- * * JPA1 BOOK <br>
- * * JPA2 BOOK <br>
- * <p>
- * * userB <br>
- * * SPRING1 BOOK <br>
- * * SPRING2 BOOK <br>
+ * 테스트용 데이터
  */
 @Component
 @RequiredArgsConstructor
@@ -59,6 +52,15 @@ public class InitDB {
             Delivery delivery = createDelivery(member);
             Order order = Order.createOrder(member, delivery, orderItem1, orderItem2);
             em.persist(order);
+
+            OrderItem orderItem3 = OrderItem.createOrderItem(book2, 20000, 10);
+            OrderItem orderItem4 = OrderItem.createOrderItem(book2, 20000, 23);
+            OrderItem orderItem5 = OrderItem.createOrderItem(book1, 20000, 15);
+
+            Order order2 = Order.createOrder(member, delivery, orderItem5);
+            Order order3 = Order.createOrder(member, delivery, orderItem3, orderItem4);
+            em.persist(order2);
+            em.persist(order3);
         }
 
         public void dbInit2() {
@@ -73,10 +75,13 @@ public class InitDB {
 
             OrderItem orderItem1 = OrderItem.createOrderItem(book1, 20000, 3);
             OrderItem orderItem2 = OrderItem.createOrderItem(book2, 40000, 4);
-
             Delivery delivery = createDelivery(member);
             Order order = Order.createOrder(member, delivery, orderItem1, orderItem2);
             em.persist(order);
+
+            OrderItem orderItem3 = OrderItem.createOrderItem(book2, 40000, 10);
+            Order order2 = Order.createOrder(member, delivery, orderItem1, orderItem3);
+            em.persist(order2);
         }
 
         private Member createMember(String name, String city, String street, String zipcode) {

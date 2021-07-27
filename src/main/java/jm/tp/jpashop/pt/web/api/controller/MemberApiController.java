@@ -5,6 +5,7 @@ import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.service.MemberService;
 import jm.tp.jpashop.pt.web.api.dto.ApiResult;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
+import jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
+import static jm.tp.jpashop.pt.web.api.dto.ApiResult.failed;
+import static jm.tp.jpashop.pt.web.api.dto.ApiResult.succeed;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.MediaType.TEXT_PLAIN;
 
@@ -58,9 +61,9 @@ public class MemberApiController {
         try {
             memberService.join(memberApiDto);
         } catch (IllegalStateException e) {
-            return ApiResult.failed(memberApiDto, "중복하는 회원이 존재합니다.");
+            return failed(memberApiDto, "중복하는 회원이 존재합니다.");
         }
-        return ApiResult.succeed(memberApiDto);
+        return succeed(memberApiDto);
     }
 
     @PostMapping("/api/member4")
@@ -69,31 +72,39 @@ public class MemberApiController {
             memberService.join(memberApiDto);
         } catch (IllegalStateException e) {
             return ResponseEntity.status(BAD_REQUEST)
-                    .body(ApiResult.failed(memberApiDto, "이름이 중복되는 회원이 존재합니다."));
+                    .body(failed(memberApiDto, "이름이 중복되는 회원이 존재합니다."));
         }
-        return ResponseEntity.ok(ApiResult.succeed(memberApiDto));
+        return ResponseEntity.ok(succeed(memberApiDto));
     }
 
     @GetMapping("/api/members")
     public ApiResult<List<MemberApiDto>> memberList() {
-        return ApiResult.succeed(memberService.findAll().stream()
+        return succeed(memberService.findAll().stream()
                 .map(MemberApiDto::create)
                 .collect(toList()));
     }
 
     @GetMapping("/api/member/{id}")
-    public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id) {
+    public ResponseEntity<ApiResult<MemberApiDto>> findMember(@PathVariable Long id) {
         Member member = memberService.findOne(id);
         if (member == null) {
             throw new NotExitMemberException();
         }
-        return ResponseEntity.ok(ApiResult.succeed(MemberApiDto.create(member)));
+        return ResponseEntity.ok(succeed(MemberApiDto.create(member)));
     }
 
     @PostMapping("/api/member/{id}")
     public ResponseEntity<ApiResult<MemberApiDto>> updateMemberInfo(@PathVariable Long id,
                                                                     @RequestBody MemberApiDto memberApiDto) {
         MemberApiDto member = memberService.update(id, memberApiDto);
-        return ResponseEntity.ok(ApiResult.succeed(member));
+        return ResponseEntity.ok(succeed(member));
+    }
+
+    /**
+     * 회원 아이디로 모든 주문 내역 확인
+     */
+    @GetMapping("/api/member/{id}/orders")
+    public ApiResult<List<OrderItemListResponseDto>> findOrderItemsByMemberId(@PathVariable Long id) {
+        return succeed(memberService.findOrdersDetailInfoById(id));
     }
 }

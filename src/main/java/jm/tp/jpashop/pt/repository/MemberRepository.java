@@ -43,4 +43,8 @@ public class MemberRepository {
         return em.createQuery("select count(m) from Member m", Long.class)
                 .getSingleResult();
     }
+
+    public Boolean isExitMember(Long id) {
+        return em.find(Member.class, id) != null;
+    }
 }

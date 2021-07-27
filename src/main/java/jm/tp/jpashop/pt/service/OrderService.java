@@ -97,6 +97,10 @@ public class OrderService {
         return orderRepository.findOrderItemsByIdForDto(id);
     }
 
+    public List<OrderItemListResponseDto> findOrderItemsByMemberId(Long id) {
+        return orderRepository.findOrderAndOrderItemsByMemberId(id);
+    }
+
     public Optional<List<OrderSimpleInfoDto>> findOrders() {
         List<OrderSimpleInfoDto> orders = orderRepository.findAllByString(OrderSearch.builder().build()).stream()
                 .map(OrderSimpleInfoDto::new)
