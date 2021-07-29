@@ -4,6 +4,7 @@ import jm.tp.jpashop.pt.exception.NotExitMemberException;
 import jm.tp.jpashop.pt.model.Member;
 import jm.tp.jpashop.pt.model.dto.MemberUpdateInfoDto;
 import jm.tp.jpashop.pt.repository.MemberRepository;
+import jm.tp.jpashop.pt.repository.OrderRepository;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import jm.tp.jpashop.pt.web.api.dto.OrderItemListResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ import java.util.List;
 public class MemberService {
 
     private final MemberRepository memberRepository;
-    private final OrderService orderService;
+    private final OrderRepository orderRepository;
 
     @Transactional
     public Long join(Member member) {
@@ -65,6 +66,10 @@ public class MemberService {
     }
 
     public List<OrderItemListResponseDto> findOrdersDetailInfoById(Long id) {
-        return orderService.findOrderItemsByMemberId(id);
+        Member member = memberRepository.findById(id);
+        if (member == null) {
+            throw new NotExitMemberException();
+        }
+        return orderRepository.findOrderAndOrderItemsByMemberId(id);
     }
 }
