@@ -4,7 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jm.tp.jpashop.pt.exception.NotExitMemberException;
 import jm.tp.jpashop.pt.model.Address;
 import jm.tp.jpashop.pt.model.Member;
+import jm.tp.jpashop.pt.model.OrderItem;
+import jm.tp.jpashop.pt.model.item.Book;
+import jm.tp.jpashop.pt.model.item.Item;
+import jm.tp.jpashop.pt.service.ItemService;
 import jm.tp.jpashop.pt.service.MemberService;
+import jm.tp.jpashop.pt.service.OrderService;
 import jm.tp.jpashop.pt.web.api.dto.MemberApiDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +44,38 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MemberApiControllerTest {
 
     private final MemberService memberService;
+    private final ItemService itemService;
+    private final OrderService orderService;
     private final MockMvc mockMvc;
     private final ObjectMapper objectMapper;
+
+    private int testMemberCnt;
+    private int testItemCnt;
+
+    private Member createTestMember() {
+        Member testMember = Member.builder()
+                .name("user" + ++testMemberCnt)
+                .address(Address.builder()
+                        .city("인천" + testMemberCnt)
+                        .street("마장로" + (testMemberCnt * 10 + 1))
+                        .etc(String.valueOf(testMemberCnt * 100 + 23 - 1))
+                        .build())
+                .build();
+        memberService.join(testMember);
+        return testMember;
+    }
+
+    private Item createTestItem() {
+        Book item = Book.builder()
+                .name("book" + ++testItemCnt)
+                .stockQuantity(testItemCnt * 100)
+                .price(testItemCnt)
+                .author("서정민" + testItemCnt)
+                .isbn("???" + testItemCnt)
+                .build();
+        itemService.saveItem(item);
+        return item;
+    }
 
     @Test
     @DisplayName("테스트 01. 존재하지 않는 이름의 회원이 가입하면 200의 상태와 가입 회원 정보를 반환한다.")
@@ -279,6 +314,73 @@ class MemberApiControllerTest {
                 post("/api/member/" + noExistMemberId)
                         .content(objectMapper.writeValueAsString(memberApiDto))
                         .contentType(APPLICATION_JSON)
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().is4xxClientError())
+                .andExpect(content().contentType(TEXT_PLAIN + ";charset=utf-8"))
+                .andExpect(content().string(NotExitMemberException.ERROR_MESSAGE));
+    }
+
+    // TODO: 2021-07-27 회원 주문 내역 조회 테스트 코드 (존재하지 않는 회원에 대한 주문 내역 조회시 예외 발생 구현 요망)
+
+    @Test
+    @DisplayName("테스트 09. 회원 id로 회원의 모든 주문 내역 조회 - 조회 성공(존재하는 회원 id)")
+    public void _09_findDetailOrderAndOrderItemsByMemberId() throws Exception {
+        // given
+        Member testMember = createTestMember();
+        Item testItem1 = createTestItem();
+        Item testItem2 = createTestItem();
+        Item testItem3 = createTestItem();
+
+        OrderItem orderItem1 = OrderItem.createOrderItem(testItem1, testItem1.getPrice(), 10);
+        OrderItem orderItem2 = OrderItem.createOrderItem(testItem2, testItem2.getPrice(), 10);
+        OrderItem orderItem3 = OrderItem.createOrderItem(testItem3, testItem3.getPrice(), 10);
+        OrderItem orderITem4 = OrderItem.createOrderItem(testItem1, testItem1.getPrice() / 10 * 9, 10);
+
+        Long orderId1 = orderService.order(testMember.getId(), orderItem1, orderItem2);
+        Long orderId2 = orderService.order(testMember.getId(), orderItem3);
+        Long orderId3 = orderService.order(testMember.getId(), orderITem4);
+
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/member/" + testMember.getId() + " /orders")
+                        .accept(APPLICATION_JSON, TEXT_PLAIN)
+                        .characterEncoding(UTF_8.displayName())
+        );
+
+        // then
+        result.andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(APPLICATION_JSON + ";charset=utf-8"))
+                .andExpect(jsonPath("$.data[0].orderId", is(orderId1.intValue())))
+                .andExpect(jsonPath("$.data[0].memberName", is(testMember.getName())))
+                .andExpect(jsonPath("$.data[0].orderItemList[0].itemId", is(testItem1.getId().intValue())))
+                .andExpect(jsonPath("$.data[0].orderItemList[0].itemName", is(testItem1.getName())))
+                .andExpect(jsonPath("$.data[0].orderItemList[0].orderPrice", is(testItem1.getPrice())))
+                .andExpect(jsonPath("$.data[0].orderItemList[0].totalPrice", is(10)))
+                .andExpect(jsonPath("$.data[0].orderItemList[1].itemName", is(testItem2.getName())))
+                .andExpect(jsonPath("$.data[1].orderId", is(orderId2.intValue())))
+                .andExpect(jsonPath("$.data[1].orderItemList[0].itemName", is(testItem3.getName())))
+                .andExpect(jsonPath("$.data[2].orderId", is(orderId3.intValue())))
+                .andExpect(jsonPath("$.data[2].orderItemList[0].itemName", is(testItem1.getName())))
+                .andExpect(jsonPath("$.data[2].orderItemList[0].orderPrice", is(testItem1.getPrice() / 10 * 9)));
+    }
+
+    @Test
+    @DisplayName("테스트 10. 회원 id로 회원의 모든 주문 내역 조회 - 조회 실패(존재하지 않는 회원 id):" +
+            " NotExitMemberException 예외")
+    public void _10_findDetailOrderAndOrderItemsByMemberIdAndNotExitMemberException() throws Exception {
+        // given
+        Long noExitMemberId = -1L;
+
+        // when
+        ResultActions result = mockMvc.perform(
+                get("/api/member/" + noExitMemberId + " /orders")
                         .accept(APPLICATION_JSON, TEXT_PLAIN)
                         .characterEncoding(UTF_8.displayName())
         );
