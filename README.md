@@ -6,6 +6,17 @@
 * [Spring Guide - 예외 처리 전략](https://www.popit.kr/spring-guide-%EC%97%90%EC%99%B8-%EC%B2%98%EB%A6%AC-%EC%A0%84%EB%9E%B5/)
 * [IntelliJ 디버깅 해보기](https://jojoldu.tistory.com/149)
 
+## 요구사항
+
+내가 임의로 추가하는 요구사항
+
+### 상품 구매자 조회
+
+* 상품에 대한 모든 구매자 정보(구매자 id, 이름, 구매 날짜, 구매 가격, 구매 갯수) 조회
+* 구매자는 동일한 상품을 여러번 구매할 수 있음
+* 정적인 쿼리
+* Spring Data JPA
+
 ## 이슈
 
 ### builder 패턴 적용 (롬복의 @Builder 사용)
@@ -337,12 +348,12 @@ em.create에서 반환 타입을 single object, list 로 선택이 가능하다.
 public class OrderRepository {
     public Optional<Order> findOrderItemsById(Long id) {
         return Optional.ofNullable(em.createQuery(
-                "select o from Order o " +
-                        "join fetch o.member m " +
-                        "join fetch o.delivery d " +
-                        "join fetch o.orderItems oi " +
-                        "join fetch oi.item i " +
-                        "where o.id = :id ", Order.class)
+                        "select o from Order o " +
+                                "join fetch o.member m " +
+                                "join fetch o.delivery d " +
+                                "join fetch o.orderItems oi " +
+                                "join fetch oi.item i " +
+                                "where o.id = :id ", Order.class)
                 .setParameter("id", id)
                 .getSingleResult());
     }
