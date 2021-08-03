@@ -1,5 +1,6 @@
 package jm.tp.jpashop.pt.web.api.dto;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,4 +22,15 @@ public class ItemBuyersDto {
     private List<BuyersDto> buyers = new ArrayList<>();
 
     private int buyersCnt;
+
+    @QueryProjection
+    public ItemBuyersDto(Long itemId, String itemName) {
+        this.itemId = itemId;
+        this.itemName = itemName;
+    }
+
+    public void setBuyers(List<BuyersDto> buyers) {
+        this.buyers = buyers;
+        buyersCnt = buyers.size();
+    }
 }

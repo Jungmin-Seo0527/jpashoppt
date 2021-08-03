@@ -1,5 +1,6 @@
 package jm.tp.jpashop.pt.web.api.dto;
 
+import com.querydsl.core.annotations.QueryProjection;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,9 +15,20 @@ import java.util.List;
 public class BuyersDto {
 
     private Long memberId;
-    private Long memberName;
+    private String memberName;
     private int orderCnt;
 
     @Builder.Default
     private List<OrderDto> orders = new ArrayList<>();
+
+    @QueryProjection
+    public BuyersDto(Long memberId, String memberName) {
+        this.memberId = memberId;
+        this.memberName = memberName;
+    }
+
+    public void setOrders(List<OrderDto> orders) {
+        this.orders = orders;
+        orderCnt = orders.size();
+    }
 }
